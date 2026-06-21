@@ -241,7 +241,7 @@ def admin_data():
 @app.route('/login/logout')
 def admin_logout():
     session.pop('admin_auth', None)
-    return redirect('/login')
+    return redirect('/')
 
 if __name__ == '__main__':
     debug = os.getenv('FLASK_DEBUG', '').lower() in ('1', 'true')
