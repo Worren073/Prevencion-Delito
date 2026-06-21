@@ -119,6 +119,7 @@ def api_kpis():
     try:
         res = requests.get(CSV_URL, timeout=15)
         res.raise_for_status()
+        res.encoding = 'utf-8'
         reader = csv.DictReader(io.StringIO(res.text))
     except Exception:
         return jsonify({'error': 'No se pudieron obtener los datos.'}), 502
@@ -220,6 +221,7 @@ def admin_data():
     try:
         res = requests.get(CSV_URL, timeout=15)
         res.raise_for_status()
+        res.encoding = 'utf-8'
         reader = csv.DictReader(io.StringIO(res.text))
     except Exception:
         return jsonify({'error': 'No se pudieron obtener los datos.'}), 502
