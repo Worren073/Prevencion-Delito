@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/charts/loader.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -273,23 +272,6 @@
   </div>
 
   <script>
-    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDaQfeXK0O1DUvYR584z_9lcZNNIDuuIM09IwoGebqULR5Ut1l_DB2pkoep45mb697LSjzJOIMUnTD/pub?output=csv";
-
-    const HEADER_MAP = {
-      'Marca temporal': 'fecha_solicitud',
-      'Nombre del Solicitante.': 'solicitante',
-      'Teléfono de Contacto': 'telefono',
-      'Tipo de Entidad': 'tipo_entidad',
-      'Nombre de comunidad O Escuela.': 'comunidad',
-      'Parroquia / Zona.': 'parroquia',
-      'Tema de charla Solicitada.': 'tema',
-      'Fecha Sugerida para la Actividad.': 'fecha_actividad',
-      'Cantidad Estimada de Asistentes.': 'asistentes',
-      '¿A qué público objetivo está dirigida la actividad?': 'publico'
-    };
-    const COL = {};
-    for (const [k, v] of Object.entries(HEADER_MAP)) COL[k.trim()] = v;
-
     let data = [];
     let filteredData = [];
     let sortCol = null;
@@ -316,24 +298,11 @@
     }
 
     async function fetchData() {
-      const res = await fetch(CSV_URL);
-      const csvText = await res.text();
-      const parsed = Papa.parse(csvText, {
-        header: true,
-        skipEmptyLines: true,
-        transformHeader: h => h.trim()
-      });
-      data = parsed.data
-        .filter(row => row['Marca temporal'])
-        .map(row => {
-          const obj = {};
-          for (const [rawKey, val] of Object.entries(row)) {
-            const key = COL[rawKey.trim()];
-            if (key) obj[key] = (val || '').trim();
-          }
-          obj.asistentes = parseInt(obj.asistentes, 10) || 0;
-          return obj;
-        });
+      const res = await fetch('/api/admin/data');
+      if (res.status === 401) { window.location.href = '/login'; return; }
+      if (!res.ok) throw new Error('Error al obtener datos');
+      const json = await res.json();
+      data = json.rows;
       filteredData = [...data];
     }
 

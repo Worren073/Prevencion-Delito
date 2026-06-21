@@ -14,4 +14,4 @@ COPY app.py .
 COPY templates/ ./templates/
 COPY src/dashboard.html ./src/dashboard.html
 EXPOSE 5000
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+CMD gunicorn --bind 0.0.0.0:${PORT:-5000} app:app

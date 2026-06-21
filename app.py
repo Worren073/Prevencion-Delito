@@ -213,6 +213,29 @@ def admin_dashboard():
         return redirect('/login')
     return render_template('admin.html')
 
+@app.route('/api/admin/data')
+def admin_data():
+    if not session.get('admin_auth'):
+        return jsonify({'error': 'No autorizado'}), 401
+    try:
+        res = requests.get(CSV_URL, timeout=15)
+        res.raise_for_status()
+        reader = csv.DictReader(io.StringIO(res.text))
+    except Exception:
+        return jsonify({'error': 'No se pudieron obtener los datos.'}), 502
+    rows = []
+    for row in reader:
+        if not row.get('Marca temporal', '').strip():
+            continue
+        obj = {}
+        for raw_key, val in row.items():
+            key = HEADER_MAP.get(raw_key.strip())
+            if key:
+                obj[key] = (val or '').strip()
+        obj['asistentes'] = int(obj.get('asistentes', 0) or 0)
+        rows.append(obj)
+    return jsonify({'rows': rows, 'total': len(rows)})
+
 @app.route('/login/logout')
 def admin_logout():
     session.pop('admin_auth', None)
