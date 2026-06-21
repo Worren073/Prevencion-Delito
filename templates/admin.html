@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Administrativo - Prevención del Delito</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #0A2B5E;
+      --primary-dark: #061B3D;
+      --surface: #F8F9FF;
+      --surface-container: #E5EEFF;
+      --surface-container-low: #EFF4FF;
+      --surface-container-lowest: #FFFFFF;
+      --on-surface: #0B1C30;
+      --on-surface-variant: #45464D;
+      --outline-variant: #C6C6CD;
+      --error: #BA1A1A;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+    body {
+      font-family: var(--font);
+      background: var(--surface);
+      color: var(--on-surface);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    .admin-header {
+      background: var(--primary);
+      color: #fff;
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .admin-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .admin-header-left img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+    .admin-header-left span {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .admin-header a {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font: inherit;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .admin-header a:hover { background: rgba(255,255,255,0.25); }
+    .admin-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .admin-content h2 { font-size: 1.125rem; font-weight: 600; color: var(--primary); margin-bottom: 14px; }
+    .admin-content h3 { font-size: 0.9375rem; font-weight: 600; color: var(--on-surface); margin-bottom: 10px; }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--surface-container-lowest);
+      border: 1px solid var(--outline-variant);
+      border-radius: 10px;
+      padding: 18px;
+      text-align: center;
+    }
+    .kpi-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1.2;
+    }
+    .kpi-label {
+      font-size: 0.75rem;
+      color: var(--on-surface-variant);
+      margin-top: 4px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .toolbar input {
+      flex: 1;
+      min-width: 200px;
+      height: 40px;
+      padding: 0 14px;
+      border: 1px solid var(--outline-variant);
+      border-radius: 8px;
+      font: inherit;
+      font-size: 0.8125rem;
+      outline: none;
+    }
+    .toolbar input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(10,43,94,0.1); }
+    .toolbar button {
+      height: 40px;
+      padding: 0 18px;
+      border: 1px solid var(--outline-variant);
+      border-radius: 8px;
+      background: var(--surface-container-lowest);
+      color: var(--on-surface);
+      font: inherit;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .toolbar button:hover { background: var(--surface-container); border-color: var(--primary); color: var(--primary); }
+    .result-count {
+      font-size: 0.8125rem;
+      color: var(--on-surface-variant);
+      white-space: nowrap;
+    }
+    .table-wrapper {
+      background: var(--surface-container-lowest);
+      border: 1px solid var(--outline-variant);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .table-scroll {
+      overflow-x: auto;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+    .table-scroll table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+    .table-scroll th {
+      position: sticky;
+      top: 0;
+      background: var(--surface-container);
+      color: var(--on-surface);
+      font-weight: 600;
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 2px solid var(--outline-variant);
+      cursor: pointer;
+      user-select: none;
+      z-index: 1;
+    }
+    .table-scroll th:hover { background: #d0dbef; }
+    .table-scroll th .sort-icon {
+      display: inline-block;
+      margin-left: 4px;
+      opacity: 0.4;
+      font-size: 0.625rem;
+    }
+    .table-scroll th.sorted .sort-icon { opacity: 1; }
+    .table-scroll td {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--outline-variant);
+      color: var(--on-surface-variant);
+    }
+    .table-scroll tr:hover td { background: var(--surface-container-low); }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .chart-card {
+      background: var(--surface-container-lowest);
+      border: 1px solid var(--outline-variant);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .chart-card h3 { font-size: 0.8125rem; font-weight: 600; margin-bottom: 8px; }
+    .chart-box { width: 100%; height: 210px; }
+    .summary-card {
+      background: var(--surface-container-lowest);
+      border: 1px solid var(--outline-variant);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+    .summary-card table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+    }
+    .summary-card th {
+      text-align: left;
+      padding: 8px 10px;
+      background: var(--surface-container);
+      font-weight: 600;
+      color: var(--on-surface);
+      border-bottom: 2px solid var(--outline-variant);
+      white-space: nowrap;
+    }
+    .summary-card td {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--outline-variant);
+      color: var(--on-surface-variant);
+      vertical-align: top;
+    }
+    .summary-card tr:hover td { background: var(--surface-container-low); }
+    .summary-card .sub { font-size: 0.6875rem; color: #888; }
+    .loading, .error {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      font-size: 0.9375rem;
+    }
+    .loading { color: var(--on-surface-variant); }
+    .error { color: var(--error); }
+    @media (max-width: 768px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-grid { grid-template-columns: 1fr; }
+      .admin-content { padding: 14px; }
+      .admin-header { padding: 0 14px; }
+      .admin-header-left span { font-size: 0.8125rem; }
+    }
+    @media (max-width: 480px) {
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .kpi-card { padding: 12px; }
+      .kpi-value { font-size: 1.375rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <img src="/logo-gobierno.png" alt="Logo" />
+      <span>Panel Administrativo — Sede de Prevención del Delito Barinas</span>
+    </div>
+    <a href="/login/logout">Cerrar Sesión</a>
+  </header>
+  <div class="admin-content">
+    <div id="dashboardContent">
+      <div class="loading" id="loadingDashboard">Cargando datos del dashboard...</div>
+    </div>
+  </div>
+
+  <script>
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDaQfeXK0O1DUvYR584z_9lcZNNIDuuIM09IwoGebqULR5Ut1l_DB2pkoep45mb697LSjzJOIMUnTD/pub?output=csv";
+
+    const HEADER_MAP = {
+      'Marca temporal': 'fecha_solicitud',
+      'Nombre del Solicitante.': 'solicitante',
+      'Teléfono de Contacto': 'telefono',
+      'Tipo de Entidad': 'tipo_entidad',
+      'Nombre de comunidad O Escuela.': 'comunidad',
+      'Parroquia / Zona.': 'parroquia',
+      'Tema de charla Solicitada.': 'tema',
+      'Fecha Sugerida para la Actividad.': 'fecha_actividad',
+      'Cantidad Estimada de Asistentes.': 'asistentes',
+      '¿A qué público objetivo está dirigida la actividad?': 'publico'
+    };
+    const COL = {};
+    for (const [k, v] of Object.entries(HEADER_MAP)) COL[k.trim()] = v;
+
+    let data = [];
+    let filteredData = [];
+    let sortCol = null;
+    let sortDir = 'asc';
+    let searchTerm = '';
+
+    const dashboardContent = document.getElementById('dashboardContent');
+
+    google.charts.load('current', { packages: ['corechart'] });
+    google.charts.setOnLoadCallback(init);
+
+    async function init() {
+      try {
+        await fetchData();
+        document.getElementById('loadingDashboard')?.remove();
+        renderDashboard();
+      } catch (e) {
+        const el = document.getElementById('loadingDashboard');
+        if (el) {
+          el.textContent = 'Error al cargar los datos. Verifique la conexión.';
+          el.className = 'error';
+        }
+      }
+    }
+
+    async function fetchData() {
+      const res = await fetch(CSV_URL);
+      const csvText = await res.text();
+      const parsed = Papa.parse(csvText, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: h => h.trim()
+      });
+      data = parsed.data
+        .filter(row => row['Marca temporal'])
+        .map(row => {
+          const obj = {};
+          for (const [rawKey, val] of Object.entries(row)) {
+            const key = COL[rawKey.trim()];
+            if (key) obj[key] = (val || '').trim();
+          }
+          obj.asistentes = parseInt(obj.asistentes, 10) || 0;
+          return obj;
+        });
+      filteredData = [...data];
+    }
+
+    function renderDashboard() {
+      applyFilters();
+      const total = data.length;
+      const beneficiarios = data.reduce((s, r) => s + r.asistentes, 0);
+      const entidades = new Set(data.map(r => r.comunidad?.toLowerCase())).size;
+      const parroquias = new Set(data.map(r => r.parroquia?.toLowerCase())).size;
+
+      dashboardContent.innerHTML = `
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-value">${total}</div><div class="kpi-label">Solicitudes Recibidas</div></div>
+          <div class="kpi-card"><div class="kpi-value">${beneficiarios.toLocaleString()}</div><div class="kpi-label">Beneficiarios Estimados</div></div>
+          <div class="kpi-card"><div class="kpi-value">${entidades}</div><div class="kpi-label">Entidades Alcanzadas</div></div>
+          <div class="kpi-card"><div class="kpi-value">${parroquias}</div><div class="kpi-label">Parroquias / Zonas</div></div>
+        </div>
+        <h2>Registro Completo de Solicitudes</h2>
+        <div class="toolbar">
+          <input type="text" id="searchInput" placeholder="Buscar por nombre, teléfono, comunidad, tema..." value="${searchTerm}" />
+          <button id="exportBtn"><span style="font-size:1rem;line-height:1;">⬇</span> Exportar CSV</button>
+          <span class="result-count" id="resultCount">${filteredData.length} de ${data.length} registros</span>
+        </div>
+        <div class="table-wrapper"><div class="table-scroll">
+          <table id="mainTable"><thead><tr>
+            <th data-col="fecha_solicitud">Fecha Solic. <span class="sort-icon">${sortCol === 'fecha_solicitud' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
+            <th data-col="solicitante">Solicitante <span class="sort-icon">${sortCol === 'solicitante' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
+            <th data-col="telefono">Teléfono <span class="sort-icon">${sortCol === 'telefono' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
+            <th data-col="tipo_entidad">Entidad <span class="sort-icon">${sortCol === 'tipo_entidad' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
+            <th data-col="comunidad">Comunidad / Escuela <span class="sort-icon">${sortCol === 'comunidad' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
+            <th data-col="parroquia">Parroquia <span class="sort-icon">${sortCol === 'parroquia' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
+            <th data-col="tema">Tema <span class="sort-icon">${sortCol === 'tema' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
+            <th data-col="fecha_actividad">Fecha Activ. <span class="sort-icon">${sortCol === 'fecha_actividad' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
+            <th data-col="asistentes" style="text-align:right;">Asistentes <span class="sort-icon">${sortCol === 'asistentes' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
+            <th data-col="publico">Público <span class="sort-icon">${sortCol === 'publico' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
+          </tr></thead><tbody id="tableBody"></tbody></table>
+        </div></div>
+        <h2>Dashboard Gráfico</h2>
+        <div class="charts-grid">
+          <div class="chart-card"><h3>Solicitudes por Tema</h3><div id="chart-temas" class="chart-box"></div></div>
+          <div class="chart-card"><h3>Solicitudes por Tipo de Entidad</h3><div id="chart-entidad" class="chart-box"></div></div>
+          <div class="chart-card"><h3>Solicitudes por Mes</h3><div id="chart-mes" class="chart-box"></div></div>
+          <div class="chart-card"><h3>Solicitudes por Parroquia / Zona</h3><div id="chart-parroquia" class="chart-box"></div></div>
+        </div>
+        <h2>Resumen por Solicitante</h2>
+        <div class="summary-card" id="summaryContainer"></div>
+      `;
+      renderTableBody();
+      renderSummary();
+      drawCharts();
+      bindEvents();
+    }
+
+    function applyFilters() {
+      let result = [...data];
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        result = result.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(term)));
+      }
+      if (sortCol) {
+        result.sort((a, b) => {
+          let va = a[sortCol] ?? '';
+          let vb = b[sortCol] ?? '';
+          if (sortCol === 'asistentes') {
+            va = Number(va);
+            vb = Number(vb);
+          } else {
+            va = String(va).toLowerCase();
+            vb = String(vb).toLowerCase();
+          }
+          if (va < vb) return sortDir === 'asc' ? -1 : 1;
+          if (va > vb) return sortDir === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+      filteredData = result;
+    }
+
+    function renderTableBody() {
+      const tbody = document.getElementById('tableBody');
+      if (!tbody) return;
+      const count = document.getElementById('resultCount');
+      if (count) count.textContent = `${filteredData.length} de ${data.length} registros`;
+      if (filteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:#888;">No se encontraron registros.</td></tr>';
+        return;
+      }
+      let html = '';
+      filteredData.slice().reverse().forEach(r => {
+        html += '<tr><td>' + (r.fecha_solicitud?.split(' ')[0] || '-') + '</td><td><strong>' + esc(r.solicitante) + '</strong></td><td>' + esc(r.telefono) + '</td><td>' + esc(r.tipo_entidad) + '</td><td>' + esc(r.comunidad) + '</td><td>' + esc(r.parroquia) + '</td><td>' + esc(r.tema) + '</td><td>' + (r.fecha_actividad || '-') + '</td><td style="text-align:right;">' + r.asistentes + '</td><td>' + esc(r.publico) + '</td></tr>';
+      });
+      tbody.innerHTML = html;
+    }
+
+    function renderSummary() {
+      const container = document.getElementById('summaryContainer');
+      if (!container) return;
+      const grouped = {};
+      data.forEach(r => {
+        const key = (r.solicitante || '').toLowerCase().trim();
+        if (!key) return;
+        if (!grouped[key]) {
+          grouped[key] = { solicitante: r.solicitante, telefono: r.telefono, count: 0, temas: [], fechas: [] };
+        }
+        grouped[key].count++;
+        if (r.tema && !grouped[key].temas.includes(r.tema)) grouped[key].temas.push(r.tema);
+        if (r.fecha_solicitud) grouped[key].fechas.push(r.fecha_solicitud.split(' ')[0]);
+      });
+      const sorted = Object.values(grouped).sort((a, b) => b.count - a.count);
+      if (sorted.length === 0) {
+        container.innerHTML = '<p style="color:var(--on-surface-variant);font-size:0.8125rem;">No hay datos.</p>';
+        return;
+      }
+      let html = '<table><thead><tr><th>Solicitante</th><th>Teléfono</th><th>Solicitudes</th><th>Temas</th><th>Fechas</th></tr></thead><tbody>';
+      sorted.forEach(g => {
+        html += '<tr><td><strong>' + esc(g.solicitante) + '</strong></td><td>' + esc(g.telefono) + '</td><td>' + g.count + '</td><td><span class="sub">' + esc(g.temas.join(', ')) + '</span></td><td><span class="sub">' + g.fechas.join(', ') + '</span></td></tr>';
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function drawCharts() {
+      drawChart('chart-temas', countBy(data, r => r.tema), 'Tema', { left: 180 });
+      drawChart('chart-entidad', countBy(data, r => r.tipo_entidad), 'Entidad', { left: 120 });
+      drawMesChart();
+      drawChart('chart-parroquia', countBy(data, r => r.parroquia), 'Parroquia', { left: 130 });
+    }
+
+    function countBy(arr, fn) {
+      const map = {};
+      arr.forEach(item => { const k = fn(item); if (k) map[k] = (map[k] || 0) + 1; });
+      return Object.entries(map).map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count);
+    }
+
+    function drawChart(elId, counts, label, opts) {
+      const el = document.getElementById(elId);
+      if (!el || counts.length === 0) return;
+      const dt = new google.visualization.DataTable();
+      dt.addColumn('string', label);
+      dt.addColumn('number', 'Solicitudes');
+      dt.addRows(counts.map(c => [c.label, c.count]));
+      const chart = new google.visualization.BarChart(el);
+      chart.draw(dt, {
+        chartArea: { left: opts.left || 120, right: 12, top: 8, bottom: 12 },
+        bars: 'horizontal', height: 210,
+        colors: ['#0A2B5E'],
+        hAxis: { textPosition: 'none', gridlines: { count: 0 }, minValue: 0 },
+        vAxis: { textStyle: { fontSize: 10, fontName: 'Inter' } },
+        legend: { position: 'none' }, bar: { groupWidth: '70%' }, fontSize: 10
+      });
+    }
+
+    function drawMesChart() {
+      const el = document.getElementById('chart-mes');
+      if (!el) return;
+      const counts = {};
+      data.forEach(r => {
+        if (!r.fecha_solicitud) return;
+        const parts = r.fecha_solicitud.split(/[/ :]/);
+        if (parts.length < 3) return;
+        const month = parts[1].padStart(2, '0');
+        const year = parts[2];
+        const key = year + '-' + month;
+        if (!counts[key]) {
+          const names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+          counts[key] = { label: names[parseInt(parts[1]) - 1] + ' ' + year, count: 0 };
+        }
+        counts[key].count++;
+      });
+      const sorted = Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v);
+      if (sorted.length === 0) return;
+      const dt = new google.visualization.DataTable();
+      dt.addColumn('string', 'Mes');
+      dt.addColumn('number', 'Solicitudes');
+      dt.addRows(sorted.map(c => [c.label, c.count]));
+      const chart = new google.visualization.ColumnChart(el);
+      chart.draw(dt, {
+        chartArea: { left: 36, right: 12, top: 8, bottom: 36 },
+        height: 210, colors: ['#0A2B5E'],
+        hAxis: { textStyle: { fontSize: 10, fontName: 'Inter' }, slantedText: true, slantedTextAngle: 30 },
+        vAxis: { textStyle: { fontSize: 10, fontName: 'Inter' }, minValue: 0, format: '0' },
+        legend: { position: 'none' }, fontSize: 10
+      });
+    }
+
+    function bindEvents() {
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => { searchTerm = e.target.value; applyFilters(); renderTableBody(); });
+      }
+      document.querySelectorAll('#mainTable th').forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.dataset.col;
+          if (!col) return;
+          if (sortCol === col) { sortDir = sortDir === 'asc' ? 'desc' : 'asc'; }
+          else { sortCol = col; sortDir = 'asc'; }
+          applyFilters();
+          renderDashboard();
+        });
+      });
+      const exportBtn = document.getElementById('exportBtn');
+      if (exportBtn) exportBtn.addEventListener('click', exportCSV);
+    }
+
+    function exportCSV() {
+      if (data.length === 0) return;
+      const headers = ['Fecha Solicitud','Solicitante','Teléfono','Tipo Entidad','Comunidad/Escuela','Parroquia/Zona','Tema','Fecha Actividad','Asistentes','Público Objetivo'];
+      const rows = data.map(r => [r.fecha_solicitud || '', r.solicitante || '', r.telefono || '', r.tipo_entidad || '', r.comunidad || '', r.parroquia || '', r.tema || '', r.fecha_actividad || '', r.asistentes, r.publico || '']);
+      let csv = '\uFEFF' + headers.join(',') + '\n';
+      rows.forEach(row => {
+        csv += row.map(v => {
+          const s = String(v).replace(/"/g, '""');
+          return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s + '"' : s;
+        }).join(',') + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'solicitudes_prevencion_' + new Date().toISOString().split('T')[0] + '.csv';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function esc(s) {
+      if (!s) return '-';
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

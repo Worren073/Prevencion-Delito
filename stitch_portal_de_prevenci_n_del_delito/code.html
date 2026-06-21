@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sede de Prevención del Delito Barinas | Construyendo Comunidades Más Seguras</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-secondary-fixed-variant": "#444749",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "surface-variant": "#d3e4fe",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#1a1c1c",
+                        "on-surface": "#0b1c30",
+                        "outline": "#76777d",
+                        "tertiary": "#000000",
+                        "on-primary-container": "#7c839b",
+                        "on-tertiary-container": "#838484",
+                        "on-primary-fixed": "#131b2e",
+                        "surface-container": "#e5eeff",
+                        "secondary": "#5c5f61",
+                        "secondary-fixed-dim": "#c4c7c9",
+                        "secondary-fixed": "#e0e3e5",
+                        "primary-fixed": "#dae2fd",
+                        "surface-container-high": "#dce9ff",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-surface-variant": "#45464d",
+                        "secondary-container": "#e0e3e5",
+                        "on-background": "#0b1c30",
+                        "surface-container-low": "#eff4ff",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#f8f9ff",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "outline-variant": "#c6c6cd",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#565e74",
+                        "inverse-surface": "#213145",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#000000",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-secondary-container": "#626567",
+                        "primary-container": "#131b2e",
+                        "background": "#f8f9ff",
+                        "inverse-primary": "#bec6e0",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "on-secondary-fixed": "#191c1e",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "surface": "#f8f9ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "stack-md": "16px",
+                        "base": "8px",
+                        "container-max": "1280px",
+                        "stack-sm": "8px",
+                        "stack-lg": "32px",
+                        "margin-desktop": "40px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased overflow-x-hidden selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TopNavBar -->
+<nav class="w-full sticky top-0 z-50 bg-surface-container-lowest dark:bg-surface-container-low border-b border-outline-variant dark:border-outline shadow-sm">
+<div class="flex justify-between items-center max-w-container-max mx-auto px-margin-desktop h-20">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">shield_person</span>
+<span class="font-headline-sm text-headline-sm font-bold text-primary dark:text-on-primary-fixed tracking-tight">Sede de Prevención del Delito Barinas</span>
+</div>
+<div class="hidden md:flex items-center gap-8 font-body-md text-body-md">
+<a aria-current="page" class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim pb-1 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-200" href="#inicio">Inicio</a>
+<a class="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-200" href="#programas">Programas</a>
+<a class="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-200" href="#solicitar">Solicitar Charla</a>
+<a class="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-200" href="#estadisticas">Estadísticas</a>
+</div>
+<div class="hidden md:block">
+<a class="inline-flex items-center justify-center h-12 px-6 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container hover:text-on-primary-container transition-all shadow-sm" href="#solicitar">
+                    Reportar Incidente
+                </a>
+</div>
+<!-- Mobile Menu Button -->
+<button aria-label="Menu" class="md:hidden p-2 text-primary">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</nav>
+<main>
+<!-- Hero Section -->
+<section class="relative pt-24 pb-32 overflow-hidden flex items-center min-h-[819px]" id="inicio">
+<div class="absolute inset-0 z-0">
+<div class="bg-cover bg-center w-full h-full opacity-10" data-alt="A modern, high-quality, professional photograph of a diverse community gathering safely in a bright, modern public square. The scene is illuminated by soft, natural sunlight emphasizing a sense of security, transparency, and order. The image features a corporate modern light-mode aesthetic, utilizing a clean palette with cool blue undertones to represent institutional authority and reliability. High resolution, 8k, photorealistic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBfymJdiLQVL7qeFViQiYCdl2MEwC4Gnhju1yGkwLDY768ngqqmlrYJ2AeAt0q__0-QK5LffZ_JSdgbSeMs0UTxY9cR8UGRj2Pb0b5iM7aFitsK5dv8JiV0wJ0c-1usOwygKxWnWRjSvDf3oQlLyU24gSaAsmHztD71NnG2egcAW9R5hQnT6DDu7tWImMJRrmAdPqA44Tv_PH1UUwO0t8EFFnf01W_W_8u0tn89TXTuyky5at6XDzWsYygmNcgf8BF4LCn8yxzGvSE')"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background"></div>
+</div>
+<div class="relative z-10 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex flex-col items-center text-center">
+<div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high border border-outline-variant mb-8">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Iniciativa Gubernamental</span>
+</div>
+<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-primary max-w-4xl mb-6 leading-tight">
+                    Construyendo Comunidades Más Seguras
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-10">
+                    Nuestra misión es educar, prevenir y proteger. Brindamos herramientas e información vital a escuelas, comunidades y organizaciones para mitigar riesgos y fomentar una cultura de paz.
+                </p>
+<div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+<a class="inline-flex items-center justify-center h-14 px-8 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all shadow-md group" href="#solicitar">
+                        Solicitar Charla Preventiva
+                        <span class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</a>
+<a class="inline-flex items-center justify-center h-14 px-8 rounded-lg bg-surface text-primary border border-primary font-label-md text-label-md hover:bg-surface-variant transition-all" href="#programas">
+                        Explorar Programas
+                    </a>
+</div>
+</div>
+</section>
+<!-- Programas Formativos -->
+<section class="py-24 bg-surface-container-lowest relative z-10" id="programas">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="text-center mb-16">
+<h2 class="font-display-lg-mobile text-display-lg-mobile md:font-headline-md md:text-headline-md text-primary mb-4">Programas Formativos</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Capacitación especializada diseñada para abordar las problemáticas actuales con un enfoque preventivo y educativo.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 hover:shadow-[0_4px_24px_rgba(0,0,0,0.05)] transition-shadow duration-300 flex flex-col h-full">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary mb-6">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">groups</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">Prevención del Acoso Escolar</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow">Estrategias de identificación, intervención y prevención del bullying en entornos educativos para garantizar espacios seguros.</p>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 hover:shadow-[0_4px_24px_rgba(0,0,0,0.05)] transition-shadow duration-300 flex flex-col h-full">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary mb-6">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">devices</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">Seguridad Digital</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow">Uso responsable de redes sociales, prevención de ciberacoso y concientización sobre delitos informáticos comunes.</p>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 hover:shadow-[0_4px_24px_rgba(0,0,0,0.05)] transition-shadow duration-300 flex flex-col h-full">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary mb-6">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">family_home</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">Prevención de Violencia</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow">Abordaje integral para la prevención de la violencia intrafamiliar y de género, promoviendo el respeto y la resolución pacífica de conflictos.</p>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 hover:shadow-[0_4px_24px_rgba(0,0,0,0.05)] transition-shadow duration-300 flex flex-col h-full">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary mb-6">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">Prevención de Adicciones</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow">Información fundamentada y estrategias preventivas sobre el uso y abuso de sustancias en poblaciones vulnerables.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Formulario de Captación -->
+<section class="py-24 bg-surface relative" id="solicitar">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="flex flex-col lg:flex-row gap-16 items-start">
+<div class="w-full lg:w-5/12 sticky top-28">
+<h2 class="font-display-lg-mobile text-display-lg-mobile md:font-headline-md md:text-headline-md text-primary mb-6">Solicitar Charla Preventiva</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8">
+                            Complete el siguiente formulario para agendar una sesión formativa en su institución. Nuestro equipo evaluará la solicitud y se pondrá en contacto para confirmar los detalles logísticos.
+                        </p>
+<div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant flex items-start gap-4 mb-6">
+<span class="material-symbols-outlined text-primary mt-1" style="font-variation-settings: 'FILL' 1;">info</span>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface mb-1">Totalmente Gratuito</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Todos nuestros programas son de carácter público y sin costo alguno para instituciones educativas y comunidades organizadas.</p>
+</div>
+</div>
+</div>
+<div class="w-full lg:w-7/12 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-8 md:p-10">
+<form class="space-y-6" id="charlaForm">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Nombre -->
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface" for="nombre">Nombre del Solicitante *</label>
+<input class="h-12 px-4 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors w-full font-body-md text-body-md placeholder:text-outline" id="nombre" name="nombre" required="" type="text"/>
+</div>
+<!-- Teléfono -->
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface" for="telefono">Teléfono de Contacto *</label>
+<input class="h-12 px-4 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors w-full font-body-md text-body-md placeholder:text-outline" id="telefono" name="telefono" required="" type="tel"/>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Institución -->
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface" for="institucion">Escuela / Comunidad *</label>
+<input class="h-12 px-4 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors w-full font-body-md text-body-md placeholder:text-outline" id="institucion" name="institucion" required="" type="text"/>
+</div>
+<!-- Tipo Entidad -->
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface" for="tipo_entidad">Tipo de Entidad *</label>
+<div class="relative">
+<select class="h-12 px-4 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors w-full font-body-md text-body-md appearance-none" id="tipo_entidad" name="tipo_entidad" required="">
+<option disabled="" selected="" value="">Seleccione una opción</option>
+<option value="Escuela Pública">Escuela Pública</option>
+<option value="Escuela Privada">Escuela Privada</option>
+<option value="Consejo Comunal">Consejo Comunal / Junta Vecinal</option>
+<option value="Empresa">Empresa / Institución Privada</option>
+<option value="Otro">Otro</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-outline">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Tema -->
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface" for="tema">Tema de la Charla *</label>
+<div class="relative">
+<select class="h-12 px-4 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors w-full font-body-md text-body-md appearance-none" id="tema" name="tema" required="">
+<option disabled="" selected="" value="">Seleccione el tema principal</option>
+<option value="Bullying">Prevención del Acoso Escolar (Bullying)</option>
+<option value="Ciberseguridad">Uso Seguro de Redes Sociales y Delitos Informáticos</option>
+<option value="Violencia">Prevención de la Violencia Intrafamiliar y de Género</option>
+<option value="Adicciones">Abordaje Preventivo de Adicciones y Sustancias</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-outline">expand_more</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Zona -->
+<div class="flex flex-col gap-2 md:col-span-1">
+<label class="font-label-md text-label-md text-on-surface" for="zona">Parroquia / Zona *</label>
+<input class="h-12 px-4 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors w-full font-body-md text-body-md" id="zona" name="zona" required="" type="text"/>
+</div>
+<!-- Fecha -->
+<div class="flex flex-col gap-2 md:col-span-1">
+<label class="font-label-md text-label-md text-on-surface" for="fecha">Fecha Sugerida *</label>
+<input class="h-12 px-4 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors w-full font-body-md text-body-md text-on-surface" id="fecha" name="fecha" required="" type="date"/>
+</div>
+<!-- Asistentes -->
+<div class="flex flex-col gap-2 md:col-span-1">
+<label class="font-label-md text-label-md text-on-surface" for="asistentes">Asistentes *</label>
+<input class="h-12 px-4 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors w-full font-body-md text-body-md" id="asistentes" min="10" name="asistentes" placeholder="Ej. 50" required="" type="number"/>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant">
+<button class="w-full h-14 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-all shadow-md flex justify-center items-center gap-2" type="submit">
+<span>Enviar Solicitud</span>
+<span class="material-symbols-outlined text-sm">send</span>
+</button>
+<p class="text-center font-body-md text-[13px] text-on-surface-variant mt-4">Sus datos serán tratados conforme a las leyes de privacidad vigentes.</p>
+</div>
+<!-- Success Message (Hidden by default) -->
+<div class="hidden p-4 rounded-lg bg-[#eaf1ff] border border-primary-fixed text-primary font-body-md text-sm mt-4 text-center" id="formSuccess">
+                                Solicitud enviada correctamente. Nos comunicaremos pronto.
+                            </div>
+</form>
+</div>
+</div>
+</div>
+</section>
+<!-- Estadísticas Dashboard -->
+<section class="py-24 bg-surface-container-lowest border-t border-outline-variant" id="estadisticas">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="text-center mb-12">
+<h2 class="font-display-lg-mobile text-display-lg-mobile md:font-headline-md md:text-headline-md text-primary mb-4">Impacto en Cifras</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Datos abiertos y transparentes sobre nuestro alcance y efectividad en la prevención comunitaria a nivel nacional.</p>
+</div>
+<div class="bg-surface-bright border border-outline-variant rounded-xl overflow-hidden shadow-sm" id="dashboard-container">
+<!-- Placeholder for Looker Studio Embed -->
+<iframe allowfullscreen="" class="w-full" frameborder="0" height="600px" src="about:blank" style="border:0" title="Dashboard Estadísticas Prevención" width="100%"></iframe>
+<div class="p-4 bg-surface-container-low border-t border-outline-variant flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+                            Datos actualizados en tiempo real
+                        </span>
+<a class="font-label-sm text-label-sm text-primary hover:underline flex items-center gap-1" href="#">
+                            Ver reporte detallado
+                            <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full bottom-0 bg-primary-container dark:bg-tertiary-container text-on-primary dark:text-on-tertiary-container font-label-md text-label-md">
+<div class="flex flex-col md:flex-row justify-between items-center py-stack-lg px-margin-desktop gap-gutter max-w-container-max mx-auto">
+<div class="flex items-center gap-2 mb-4 md:mb-0">
+<span class="material-symbols-outlined text-on-primary-fixed text-2xl" style="font-variation-settings: 'FILL' 1;">shield_person</span>
+<span class="font-headline-sm text-headline-sm text-on-primary-fixed">Sede de Prevención del Delito Barinas</span>
+</div>
+<p class="text-center md:text-left text-on-primary-container dark:text-on-tertiary-container opacity-80">
+                © 2024 Sede de Prevención del Delito Barinas. Institución Gubernamental.
+            </p>
+<div class="flex gap-6 mt-4 md:mt-0">
+<a class="text-on-primary-container dark:text-on-tertiary-container opacity-80 hover:opacity-100 hover:underline transition-all focus:ring-2 focus:ring-on-primary rounded outline-none" href="#">Privacidad</a>
+<a class="text-on-primary-container dark:text-on-tertiary-container opacity-80 hover:opacity-100 hover:underline transition-all focus:ring-2 focus:ring-on-primary rounded outline-none" href="#">Términos de Uso</a>
+<a class="text-on-primary-container dark:text-on-tertiary-container opacity-80 hover:opacity-100 hover:underline transition-all focus:ring-2 focus:ring-on-primary rounded outline-none" href="#">Transparencia</a>
+<a class="text-on-primary-container dark:text-on-tertiary-container opacity-80 hover:opacity-100 hover:underline transition-all focus:ring-2 focus:ring-on-primary rounded outline-none" href="#">Contacto</a>
+</div>
+</div>
+</footer>
+<script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // AJAX Form Submission Handling
+        document.getElementById('charlaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            
+            // Visual feedback - Loading state
+            submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Enviando...';
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-80');
+
+            // Simulate AJAX request to Google Forms placeholder URL
+            setTimeout(() => {
+                // Success state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-80');
+                
+                this.reset();
+                
+                const successMsg = document.getElementById('formSuccess');
+                successMsg.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    successMsg.classList.add('hidden');
+                }, 5000);
+                
+            }, 1500);
+        });
+    </script>
+</body></html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Prevención del Delito</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #0A2B5E;
+      --surface: #F8F9FF;
+      --surface-container: #E5EEFF;
+      --surface-container-low: #EFF4FF;
+      --surface-container-lowest: #FFFFFF;
+      --on-surface: #0B1C30;
+      --on-surface-variant: #45464D;
+      --outline-variant: #C6C6CD;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+    body {
+      font-family: var(--font);
+      background: var(--surface);
+      color: var(--on-surface);
+      padding: 24px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    h2 { font-size: 1.25rem; font-weight: 600; color: var(--primary); margin-bottom: 16px; }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--surface-container-lowest);
+      border: 1px solid var(--outline-variant);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .kpi-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1.2;
+    }
+    .kpi-label {
+      font-size: 0.8125rem;
+      color: var(--on-surface-variant);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .chart-card {
+      background: var(--surface-container-lowest);
+      border: 1px solid var(--outline-variant);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .chart-card h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--on-surface);
+      margin-bottom: 8px;
+    }
+    .chart-box { width: 100%; height: 220px; }
+    .loading, .error {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      font-size: 0.9375rem;
+    }
+    .loading { color: var(--on-surface-variant); }
+    .error { color: #BA1A1A; }
+    @media (max-width: 768px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-grid { grid-template-columns: 1fr; }
+      body { padding: 12px; }
+    }
+    @media (max-width: 480px) {
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .kpi-card { padding: 12px; }
+      .kpi-value { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="loading" id="loading">Cargando datos del dashboard...</div>
+  </div>
+  <script>
+    let kpis = null;
+
+    google.charts.load('current', { packages: ['corechart'] });
+    google.charts.setOnLoadCallback(init);
+
+    async function init() {
+      try {
+        const res = await fetch('/api/kpis');
+        if (!res.ok) throw new Error('Error');
+        kpis = await res.json();
+        document.getElementById('loading').remove();
+        renderKPI();
+        drawCharts();
+        addEventListener('resize', () => drawCharts());
+      } catch (e) {
+        const el = document.getElementById('loading');
+        el.textContent = 'Error al cargar los datos. Verifique la conexión e intente nuevamente.';
+        el.className = 'error';
+      }
+    }
+
+    function renderKPI() {
+      document.getElementById('app').innerHTML = `
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-value">${kpis.total}</div><div class="kpi-label">Solicitudes Recibidas</div></div>
+          <div class="kpi-card"><div class="kpi-value">${kpis.beneficiarios.toLocaleString()}</div><div class="kpi-label">Beneficiarios Estimados</div></div>
+          <div class="kpi-card"><div class="kpi-value">${kpis.entidades}</div><div class="kpi-label">Entidades Alcanzadas</div></div>
+          <div class="kpi-card"><div class="kpi-value">${kpis.parroquias}</div><div class="kpi-label">Parroquias / Zonas</div></div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card"><h3>Solicitudes por Tema</h3><div id="chart-temas" class="chart-box"></div></div>
+          <div class="chart-card"><h3>Solicitudes por Tipo de Entidad</h3><div id="chart-entidad" class="chart-box"></div></div>
+          <div class="chart-card"><h3>Solicitudes por Mes</h3><div id="chart-mes" class="chart-box"></div></div>
+          <div class="chart-card"><h3>Solicitudes por Parroquia / Zona</h3><div id="chart-parroquia" class="chart-box"></div></div>
+        </div>
+      `;
+    }
+
+    function drawCharts() {
+      drawChart('chart-temas', kpis.temas, 180);
+      drawChart('chart-entidad', kpis.tipo_entidad, 120);
+      drawMesChart();
+      drawChart('chart-parroquia', kpis.parroquias_data, 130);
+    }
+
+    function drawChart(elId, counts, left) {
+      const el = document.getElementById(elId);
+      if (!el || !counts.length) return;
+      const dt = new google.visualization.DataTable();
+      dt.addColumn('string', '');
+      dt.addColumn('number', 'Solicitudes');
+      dt.addRows(counts.map(c => [c.label, c.count]));
+      const chart = new google.visualization.BarChart(el);
+      chart.draw(dt, {
+        chartArea: { left, right: 16, top: 8, bottom: 16 },
+        bars: 'horizontal', height: 220,
+        colors: ['#0A2B5E'],
+        hAxis: { textPosition: 'none', gridlines: { count: 0 }, minValue: 0 },
+        vAxis: { textStyle: { fontSize: 10, fontName: 'Inter' } },
+        legend: { position: 'none' }, bar: { groupWidth: '70%' }, fontSize: 10
+      });
+    }
+
+    function drawMesChart() {
+      const el = document.getElementById('chart-mes');
+      if (!el || !kpis.meses.length) return;
+      const dt = new google.visualization.DataTable();
+      dt.addColumn('string', 'Mes');
+      dt.addColumn('number', 'Solicitudes');
+      dt.addRows(kpis.meses.map(c => [c.label, c.count]));
+      const chart = new google.visualization.ColumnChart(el);
+      chart.draw(dt, {
+        chartArea: { left: 40, right: 16, top: 8, bottom: 40 },
+        height: 220, colors: ['#0A2B5E'],
+        hAxis: { textStyle: { fontSize: 10, fontName: 'Inter' }, slantedText: true, slantedTextAngle: 30 },
+        vAxis: { textStyle: { fontSize: 10, fontName: 'Inter' }, minValue: 0, format: '0' },
+        legend: { position: 'none' }, fontSize: 10
+      });
+    }
+  </script>
+</body>
+</html>

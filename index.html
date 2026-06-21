@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sede de Prevención del Delito Barinas | Construyendo Comunidades Más Seguras</title>
+  <link rel="icon" href="/logo-gobierno.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body class="bg-surface text-on-surface font-sans antialiased overflow-x-hidden w-full">
+
+  <nav class="sticky top-0 z-50 bg-surface-container-lowest/95 backdrop-blur border-b border-outline-variant">
+    <div class="max-w-[1280px] mx-auto px-4 md:px-10 h-20 flex items-center justify-between">
+      <a href="#inicio" class="flex items-center gap-3 no-underline">
+        <img src="/logo-gobierno.png" alt="Logo" class="w-10 h-10 object-contain" />
+        <span class="text-lg font-semibold text-primary tracking-tight hidden md:inline">Sede de Prevención del Delito Barinas</span>
+      </a>
+      <div class="hidden md:flex items-center gap-8 text-sm font-medium relative">
+        <nav-links class="flex items-center gap-8 relative">
+          <a href="#inicio" class="nav-link active text-primary pb-1" data-section="inicio">Inicio</a>
+          <a href="#programas" class="nav-link text-on-surface-variant hover:text-primary transition-colors pb-1" data-section="programas">Programas</a>
+          <a href="#estadisticas" class="nav-link text-on-surface-variant hover:text-primary transition-colors pb-1" data-section="estadisticas">Estadísticas</a>
+          <span id="nav-indicator" class="absolute bottom-0 h-0.5 bg-primary rounded-full transition-all duration-300 ease-out"></span>
+        </nav-links>
+      </div>
+      <a href="#solicitar" class="hidden md:inline-flex items-center h-11 px-5 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors shadow-sm">
+        <i class="fa-solid fa-shield-halved mr-2"></i>Solicitar Charla
+      </a>
+      <button id="menuBtn" class="md:hidden text-primary p-2" aria-label="Menú">
+        <i id="menuIcon" class="fa-solid fa-bars text-xl"></i>
+      </button>
+    </div>
+    <div id="mobileMenu" class="md:hidden fixed top-20 right-4 w-72 z-50 opacity-0 pointer-events-none scale-95 translate-y-2 transition-all duration-200 ease-out">
+      <div class="flex flex-col gap-2 p-5 rounded-2xl bg-surface-container-lowest/70 backdrop-blur-2xl border border-white/30 shadow-2xl">
+        <a href="#inicio" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-primary hover:bg-primary/10 transition-colors">Inicio</a>
+        <a href="#programas" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-colors">Programas</a>
+        <a href="#estadisticas" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-colors">Estadísticas</a>
+        <hr class="border-outline-variant/50 my-1" />
+        <a href="#solicitar" class="flex items-center justify-center gap-2 h-11 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors">
+          <i class="fa-solid fa-shield-halved"></i>Solicitar Charla
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section id="inicio" class="relative pt-24 pb-32 md:pt-28 md:pb-36 overflow-hidden flex items-center min-h-[500px] md:min-h-[819px]">
+      <div class="absolute inset-0">
+        <img src="/hero-bg.webp" alt="" class="w-full h-full object-cover" />
+        <div class="absolute inset-0 backdrop-blur-sm"></div>
+      </div>
+      <div class="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary-dark/85 to-primary/60">
+        <div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(circle at 25% 50%, white 1px, transparent 1px); background-size: 40px 40px;"></div>
+      </div>
+      <div class="relative z-10 max-w-[1280px] mx-auto px-4 md:px-10 flex flex-col items-center text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm mb-8 reveal">
+          <i class="fa-solid fa-check-circle text-white/80 text-xs"></i>
+          <span class="text-xs font-semibold text-white/80 uppercase tracking-widest">Iniciativa Gubernamental</span>
+        </div>
+        <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold text-white max-w-4xl mb-6 leading-[1.15] tracking-tight reveal">
+          Construyendo Comunidades Más Seguras
+        </h1>
+        <p class="text-lg md:text-xl text-white/80 max-w-2xl mb-10 leading-relaxed reveal">
+          Nuestra misión es educar, prevenir y proteger. Brindamos herramientas e información vital a escuelas, comunidades y organizaciones para mitigar riesgos y fomentar una cultura de paz.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto reveal">
+          <a href="#solicitar" class="inline-flex items-center justify-center h-14 px-8 rounded-lg bg-white text-primary font-semibold hover:bg-white/90 transition-all shadow-lg group">
+            Solicitar Charla Preventiva
+            <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+          </a>
+          <a href="#programas" class="inline-flex items-center justify-center h-14 px-8 rounded-lg border-2 border-white/30 text-white font-semibold hover:bg-white/10 transition-all">
+            Explorar Programas
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="programas" class="py-20 md:py-24 bg-surface-container-lowest">
+      <div class="max-w-[1280px] mx-auto px-4 md:px-10">
+        <div class="text-center mb-14 reveal">
+          <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-primary mb-4">Programas Formativos</h2>
+          <p class="text-base md:text-lg text-on-surface-variant max-w-2xl mx-auto">Capacitación especializada diseñada para abordar las problemáticas actuales con un enfoque preventivo y educativo.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 md:p-8 hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-shadow duration-300 flex flex-col reveal">
+            <div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary mb-6">
+              <i class="fa-solid fa-people-group text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-on-surface mb-3">Prevención del Acoso Escolar</h3>
+            <p class="text-base text-on-surface-variant flex-grow leading-relaxed">Estrategias de identificación, intervención y prevención del bullying en entornos educativos para garantizar espacios seguros.</p>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 md:p-8 hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-shadow duration-300 flex flex-col reveal">
+            <div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary mb-6">
+              <i class="fa-solid fa-laptop text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-on-surface mb-3">Seguridad Digital</h3>
+            <p class="text-base text-on-surface-variant flex-grow leading-relaxed">Uso responsable de redes sociales, prevención de ciberacoso y concientización sobre delitos informáticos comunes.</p>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 md:p-8 hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-shadow duration-300 flex flex-col reveal">
+            <div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary mb-6">
+              <i class="fa-solid fa-house-chimney text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-on-surface mb-3">Prevención de Violencia</h3>
+            <p class="text-base text-on-surface-variant flex-grow leading-relaxed">Abordaje integral para la prevención de la violencia intrafamiliar y de género, promoviendo el respeto y la resolución pacífica de conflictos.</p>
+          </div>
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 md:p-8 hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-shadow duration-300 flex flex-col reveal">
+            <div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary mb-6">
+              <i class="fa-solid fa-heart-pulse text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-on-surface mb-3">Prevención de Adicciones</h3>
+            <p class="text-base text-on-surface-variant flex-grow leading-relaxed">Información fundamentada y estrategias preventivas sobre el uso y abuso de sustancias en poblaciones vulnerables.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="solicitar" class="py-20 md:py-24 bg-surface">
+      <div class="max-w-[1280px] mx-auto px-4 md:px-10">
+        <div class="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start">
+          <div class="w-full lg:w-5/12 lg:sticky lg:top-28 reveal">
+            <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-primary mb-6">Solicitar Charla Preventiva</h2>
+            <p class="text-base md:text-lg text-on-surface-variant mb-8 leading-relaxed">
+              Complete el siguiente formulario para agendar una sesión formativa en su institución. Nuestro equipo evaluará la solicitud y se pondrá en contacto para confirmar los detalles logísticos.
+            </p>
+            <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant flex items-start gap-4">
+              <i class="fa-solid fa-circle-info text-primary text-xl mt-1"></i>
+              <div>
+                <h4 class="text-sm font-semibold text-on-surface mb-1">Totalmente Gratuito</h4>
+                <p class="text-sm text-on-surface-variant">Todos nuestros programas son de carácter público y sin costo alguno para instituciones educativas y comunidades organizadas.</p>
+              </div>
+            </div>
+          </div>
+          <div class="w-full lg:w-7/12 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-6 md:p-10 reveal">
+            <form id="charlaForm" class="space-y-5">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="flex flex-col gap-1.5">
+                  <label for="nombre" class="text-sm font-medium text-on-surface">Nombre del Solicitante *</label>
+                  <input type="text" id="nombre" name="nombre" maxlength="100" required class="h-12 px-4 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary-light focus:ring-2 focus:ring-primary-light/20 outline-none transition-all w-full text-base" placeholder="Nombre y apellido" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label for="telefono" class="text-sm font-medium text-on-surface">Teléfono de Contacto *</label>
+                  <input type="tel" id="telefono" name="telefono" maxlength="15" required class="h-12 px-4 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary-light focus:ring-2 focus:ring-primary-light/20 outline-none transition-all w-full text-base" placeholder="0412-1234567" />
+                </div>
+              </div>
+              <div class="flex flex-col gap-1.5">
+                <label for="institucion" class="text-sm font-medium text-on-surface">Nombre de la Escuela o Comunidad *</label>
+                  <input type="text" id="institucion" name="institucion" maxlength="200" required class="h-12 px-4 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary-light focus:ring-2 focus:ring-primary-light/20 outline-none transition-all w-full text-base" placeholder="Nombre de la institución" />
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-medium text-on-surface">Tipo de Entidad *</label>
+                <div class="flex gap-6 pt-1">
+                  <label class="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="radio" name="tipo_entidad" value="Escuela" required class="accent-primary w-4 h-4" />
+                    Escuela
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="radio" name="tipo_entidad" value="Comunidad" required class="accent-primary w-4 h-4" />
+                    Comunidad
+                  </label>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="flex flex-col gap-1.5">
+                  <label for="zona" class="text-sm font-medium text-on-surface">Parroquia / Zona</label>
+                  <input type="text" id="zona" name="zona" maxlength="200" class="h-12 px-4 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary-light focus:ring-2 focus:ring-primary-light/20 outline-none transition-all w-full text-base" placeholder="Ej. Parroquia Sucre" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label for="fecha" class="text-sm font-medium text-on-surface">Fecha Sugerida</label>
+                  <input type="date" id="fecha" name="fecha" class="h-12 px-4 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary-light focus:ring-2 focus:ring-primary-light/20 outline-none transition-all w-full text-base text-on-surface" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label for="asistentes" class="text-sm font-medium text-on-surface">Cantidad Estimada de Asistentes</label>
+                  <input type="number" id="asistentes" name="asistentes" min="5" max="99999" class="h-12 px-4 rounded-lg bg-surface-bright border border-outline-variant focus:border-primary-light focus:ring-2 focus:ring-primary-light/20 outline-none transition-all w-full text-base" placeholder="Ej. 50" />
+                </div>
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-medium text-on-surface">Tema de la Charla *</label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 pt-1">
+                  <label class="flex items-center gap-2 cursor-pointer text-sm p-2.5 md:p-3 rounded-lg border border-outline-variant hover:bg-surface-container-low has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                    <input type="radio" name="tema" value="Prevención del Acoso Escolar (Bullying)" required class="accent-primary w-4 h-4 shrink-0" />
+                    Prevención del Acoso Escolar (Bullying)
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer text-sm p-2.5 md:p-3 rounded-lg border border-outline-variant hover:bg-surface-container-low has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                    <input type="radio" name="tema" value="Uso Seguro de Redes Sociales y Delitos Informáticos" required class="accent-primary w-4 h-4 shrink-0" />
+                    Uso Seguro de Redes Sociales y Delitos Informáticos
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer text-sm p-2.5 md:p-3 rounded-lg border border-outline-variant hover:bg-surface-container-low has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                    <input type="radio" name="tema" value="Prevención de la Violencia Intrafamiliar y de Género" required class="accent-primary w-4 h-4 shrink-0" />
+                    Prevención de la Violencia Intrafamiliar y de Género
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer text-sm p-2.5 md:p-3 rounded-lg border border-outline-variant hover:bg-surface-container-low has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                    <input type="radio" name="tema" value="Abordaje Preventivo de Adicciones y Sustancias" required class="accent-primary w-4 h-4 shrink-0" />
+                    Abordaje Preventivo de Adicciones y Sustancias
+                  </label>
+                </div>
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-medium text-on-surface">Público objetivo *</label>
+                <div class="flex flex-wrap gap-4 pt-1">
+                  <label class="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="radio" name="publico" value="Alumnos" required class="accent-primary w-4 h-4" />
+                    Alumnos
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="radio" name="publico" value="Docentes" required class="accent-primary w-4 h-4" />
+                    Docentes
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="radio" name="publico" value="Representantes" required class="accent-primary w-4 h-4" />
+                    Representantes
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="radio" name="publico" value="Comunidad" required class="accent-primary w-4 h-4" />
+                    Comunidad
+                  </label>
+                </div>
+              </div>
+              <div class="pt-5 border-t border-outline-variant">
+                <button type="submit" class="w-full h-14 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                  <span>Enviar Solicitud</span>
+                  <i class="fa-solid fa-paper-plane text-sm"></i>
+                </button>
+                <p class="text-center text-xs text-on-surface-variant mt-4">Sus datos serán tratados conforme a las leyes de privacidad vigentes.</p>
+              </div>
+              <div id="formSuccess" class="hidden p-4 rounded-lg bg-primary/5 border border-primary/20 text-primary text-sm text-center">
+                <i class="fa-solid fa-circle-check mr-2"></i>¡Solicitud recibida! Nuestro equipo se comunicará con usted en breve.
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="estadisticas" class="py-20 md:py-24 bg-surface-container-lowest border-t border-outline-variant">
+      <div class="max-w-[1280px] mx-auto px-4 md:px-10">
+        <div class="text-center mb-12 reveal">
+          <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-primary mb-4">Impacto en Cifras</h2>
+          <p class="text-base md:text-lg text-on-surface-variant max-w-2xl mx-auto">Datos abiertos y transparentes sobre nuestro alcance y efectividad en la prevención comunitaria a nivel nacional.</p>
+        </div>
+        <div class="bg-surface-bright border border-outline-variant rounded-xl overflow-hidden shadow-sm reveal">
+          <div id="dashboard-container">
+            <iframe
+              src="/src/dashboard.html"
+              width="100%"
+              height="750"
+              style="border:0"
+              allowfullscreen
+              loading="lazy"
+              title="Dashboard Estadísticas Prevención"
+            ></iframe>
+          </div>
+          <div class="p-4 bg-surface-container-low border-t border-outline-variant flex items-center justify-between flex-wrap gap-2">
+            <span class="text-xs font-semibold text-outline flex items-center gap-1">
+              <i class="fa-solid fa-rotate text-xs"></i>Datos actualizados en tiempo real
+            </span>
+            <a href="#" class="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
+              Ver reporte detallado <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-primary text-white/80 text-sm">
+    <div class="max-w-[1280px] mx-auto px-4 md:px-10 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <img src="/logo-gobierno.png" alt="Logo" class="w-8 h-8 object-contain" />
+        <span class="font-semibold text-white hidden md:inline">Sede de Prevención del Delito Barinas</span>
+      </div>
+      <p class="text-center md:text-left text-white/60">&copy; 2026 Sede de Prevención del Delito Barinas. Institución Gubernamental.</p>
+      <div class="flex gap-5">
+        <a href="#" data-modal="privacidad" class="text-white/60 hover:text-white transition-colors">Privacidad</a>
+        <a href="#" data-modal="terminos" class="text-white/60 hover:text-white transition-colors">Términos</a>
+        <a href="#" data-modal="transparencia" class="text-white/60 hover:text-white transition-colors">Transparencia</a>
+        <span class="hidden md:inline text-white/20">|</span>
+        <a href="/login" class="hidden md:inline text-white/60 hover:text-white transition-colors">Panel</a>
+      </div>
+    </div>
+  </footer>
+
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal-container" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h3 id="modalTitle"></h3>
+        <button class="modal-close" id="modalClose" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
