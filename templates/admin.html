@@ -243,6 +243,49 @@
     }
     .loading { color: var(--on-surface-variant); }
     .error { color: var(--error); }
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+      padding: 20px;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-card {
+      background: var(--surface-container-lowest); border-radius: 14px;
+      width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto;
+      padding: 28px; box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    }
+    .modal-card h2 { font-size: 1.125rem; font-weight: 600; color: var(--primary); margin-bottom: 20px; }
+    .modal-card label { display: block; font-size: 0.8125rem; font-weight: 500; color: var(--on-surface); margin-bottom: 4px; margin-top: 14px; }
+    .modal-card label:first-of-type { margin-top: 0; }
+    .modal-card input, .modal-card select, .modal-card textarea {
+      width: 100%; height: 42px; padding: 0 12px; border: 1px solid var(--outline-variant);
+      border-radius: 8px; font: inherit; font-size: 0.875rem; outline: none;
+    }
+    .modal-card textarea { height: 80px; padding: 10px 12px; resize: vertical; }
+    .modal-card input:focus, .modal-card select:focus, .modal-card textarea:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(10,43,94,0.1);
+    }
+    .modal-actions {
+      display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px;
+    }
+    .modal-actions button {
+      height: 42px; padding: 0 22px; border-radius: 8px; font: inherit;
+      font-size: 0.875rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
+    }
+    .modal-actions .btn-secondary {
+      background: var(--surface-container); color: var(--on-surface); border: 1px solid var(--outline-variant);
+    }
+    .modal-actions .btn-secondary:hover { background: #d0dbef; }
+    .modal-actions .btn-primary {
+      background: var(--primary); color: #fff;
+    }
+    .modal-actions .btn-primary:hover { background: var(--primary-dark); }
+    .modal-actions .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .modal-card .radio-group { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 0; }
+    .modal-card .radio-group label { display: flex; align-items: center; gap: 6px; font-size: 0.8125rem; font-weight: 400; cursor: pointer; margin: 0; }
+    .modal-card .radio-group input[type="radio"] { width: auto; height: auto; accent-color: var(--primary); }
+    .modal-msg { margin-top: 12px; font-size: 0.8125rem; text-align: center; }
     @media (max-width: 768px) {
       .kpi-grid { grid-template-columns: repeat(2, 1fr); }
       .charts-grid { grid-template-columns: 1fr; }
@@ -263,7 +306,10 @@
       <img src="/logo-gobierno.png" alt="Logo" />
       <span>Panel Administrativo — Sede de Prevención del Delito Barinas</span>
     </div>
-    <a href="/login/logout">Cerrar Sesión</a>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button id="btnRegistrar" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:8px 18px;border-radius:8px;font:inherit;font-size:0.8125rem;font-weight:500;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">+ Registrar Charla</button>
+      <a href="/login/logout">Cerrar Sesión</a>
+    </div>
   </header>
   <div class="admin-content">
     <div id="dashboardContent">
@@ -271,8 +317,52 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <h2>Registrar Charla Realizada</h2>
+      <form id="actividadForm">
+        <label>Fecha de Actividad</label>
+        <input type="date" name="fecha_act" required />
+
+        <label>Nombre del funcionario Responsable</label>
+        <input type="text" name="funcionario" placeholder="Nombre y apellido" maxlength="200" required />
+
+        <label>Tipo de Actividad</label>
+        <div class="radio-group">
+          <label><input type="radio" name="tipo_act" value="Patrullaje Preventivo" required /> Patrullaje Preventivo</label>
+          <label><input type="radio" name="tipo_act" value="Reunión Vecinal" /> Reunión Vecinal</label>
+          <label><input type="radio" name="tipo_act" value="Abordaje" /> Abordaje</label>
+          <label><input type="radio" name="tipo_act" value="Charla Express" /> Charla Express</label>
+          <label><input type="radio" name="tipo_act" value="Inspección" /> Inspección</label>
+        </div>
+
+        <label>Lugar / Comunidad / Sector</label>
+        <input type="text" name="lugar" placeholder="Ej. Barrio San José" maxlength="300" required />
+
+        <label>Cantidad de funcionarios Desplegados</label>
+        <input type="number" name="funcionarios_cant" min="1" max="999" required />
+
+        <label>Novedades / Resumen de la Actividad</label>
+        <textarea name="novedades" placeholder="Describa brevemente los resultados de la actividad" maxlength="2000" required></textarea>
+
+        <label>Estatus de la Actividad</label>
+        <div class="radio-group">
+          <label><input type="radio" name="estatus" value="Completado" required /> Completado</label>
+          <label><input type="radio" name="estatus" value="En Proceso" /> En Proceso</label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="btnModalCancelar">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btnModalSubmit">Guardar Registro</button>
+        </div>
+        <div class="modal-msg" id="modalMsg"></div>
+      </form>
+    </div>
+  </div>
+
   <script>
     let data = [];
+    let actividadesData = [];
     let filteredData = [];
     let sortCol = null;
     let sortDir = 'asc';
@@ -285,7 +375,7 @@
 
     async function init() {
       try {
-        await fetchData();
+        await Promise.all([fetchData(), fetchActividades()]);
         document.getElementById('loadingDashboard')?.remove();
         renderDashboard();
       } catch (e) {
@@ -304,6 +394,15 @@
       const json = await res.json();
       data = json.rows;
       filteredData = [...data];
+    }
+
+    async function fetchActividades() {
+      const res = await fetch('/api/admin/actividades');
+      if (res.status === 401) { window.location.href = '/login'; return; }
+      if (!res.ok) throw new Error('Error al obtener actividades');
+      const json = await res.json();
+      actividadesData = json.rows;
+      window._actKpis = json;
     }
 
     function renderDashboard() {
@@ -349,10 +448,35 @@
         </div>
         <h2>Resumen por Solicitante</h2>
         <div class="summary-card" id="summaryContainer"></div>
+        <h2 style="margin-top:28px;">Actividades Registradas</h2>
+        <div class="kpi-grid" id="actKpiGrid">
+          <div class="kpi-card"><div class="kpi-value" id="actTotal">0</div><div class="kpi-label">Total Actividades</div></div>
+          <div class="kpi-card"><div class="kpi-value" id="actCompletadas">0</div><div class="kpi-label">Completadas</div></div>
+          <div class="kpi-card"><div class="kpi-value" id="actEnProceso">0</div><div class="kpi-label">En Proceso</div></div>
+          <div class="kpi-card"><div class="kpi-value" id="actFuncionarios">0</div><div class="kpi-label">Funcionarios Desplegados</div></div>
+        </div>
+        <div class="toolbar">
+          <input type="text" id="actSearchInput" placeholder="Buscar por funcionario, lugar, tipo..." />
+          <button id="actExportBtn"><span style="font-size:1rem;line-height:1;">⬇</span> Exportar CSV</button>
+          <span class="result-count" id="actCount">${actividadesData.length} registros</span>
+        </div>
+        <div class="table-wrapper"><div class="table-scroll">
+          <table id="actTable"><thead><tr>
+            <th data-act-col="fecha_registro">Fecha Registro</th>
+            <th data-act-col="fecha_actividad">Fecha Activ.</th>
+            <th data-act-col="funcionario">Funcionario</th>
+            <th data-act-col="tipo_actividad">Tipo Actividad</th>
+            <th data-act-col="lugar">Lugar</th>
+            <th data-act-col="funcionarios" style="text-align:right;">Func. Despl.</th>
+            <th data-act-col="novedades">Novedades</th>
+            <th data-act-col="estatus">Estatus</th>
+          </tr></thead><tbody id="actTableBody"></tbody></table>
+        </div></div>
       `;
       renderTableBody();
       renderSummary();
       drawCharts();
+      renderActividades();
       bindEvents();
     }
 
@@ -505,6 +629,18 @@
       });
       const exportBtn = document.getElementById('exportBtn');
       if (exportBtn) exportBtn.addEventListener('click', exportCSV);
+
+      const actSearchInput = document.getElementById('actSearchInput');
+      if (actSearchInput) {
+        actSearchInput.addEventListener('input', (e) => {
+          const term = e.target.value.toLowerCase();
+          if (!term) { actividadesData = [...window._actKpis.rows]; }
+          else { actividadesData = window._actKpis.rows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(term))); }
+          renderActividades();
+        });
+      }
+      const actExportBtn = document.getElementById('actExportBtn');
+      if (actExportBtn) actExportBtn.addEventListener('click', exportActCSV);
     }
 
     function exportCSV() {
@@ -527,12 +663,114 @@
       URL.revokeObjectURL(url);
     }
 
+    function renderActividades() {
+      const kpis = window._actKpis || { total: 0, completadas: 0, en_proceso: 0, total_funcionarios: 0 };
+      document.getElementById('actTotal').textContent = kpis.total;
+      document.getElementById('actCompletadas').textContent = kpis.completadas;
+      document.getElementById('actEnProceso').textContent = kpis.en_proceso;
+      document.getElementById('actFuncionarios').textContent = kpis.total_funcionarios;
+      document.getElementById('actCount').textContent = actividadesData.length + ' registros';
+      const tbody = document.getElementById('actTableBody');
+      if (!tbody) return;
+      if (actividadesData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#888;">No hay actividades registradas.</td></tr>';
+        return;
+      }
+      let html = '';
+      actividadesData.slice().reverse().forEach(r => {
+        const estatusClass = r.estatus === 'Completado' ? '' : 'color:#f59e0b;font-weight:600;';
+        html += '<tr><td>' + (r.fecha_registro?.split(' ')[0] || '-') + '</td><td>' + (r.fecha_actividad || '-') + '</td><td><strong>' + esc(r.funcionario) + '</strong></td><td>' + esc(r.tipo_actividad) + '</td><td>' + esc(r.lugar) + '</td><td style="text-align:right;">' + (r.funcionarios || 0) + '</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + esc(r.novedades) + '">' + esc(r.novedades) + '</td><td style="' + estatusClass + '">' + esc(r.estatus) + '</td></tr>';
+      });
+      tbody.innerHTML = html;
+    }
+
+    function exportActCSV() {
+      if (actividadesData.length === 0) return;
+      const headers = ['Fecha Registro','Fecha Actividad','Funcionario','Tipo Actividad','Lugar','Funcionarios Desplegados','Novedades','Estatus'];
+      const rows = actividadesData.map(r => [r.fecha_registro || '', r.fecha_actividad || '', r.funcionario || '', r.tipo_actividad || '', r.lugar || '', r.funcionarios || 0, r.novedades || '', r.estatus || '']);
+      let csv = '\uFEFF' + headers.join(',') + '\n';
+      rows.forEach(row => {
+        csv += row.map(v => {
+          const s = String(v).replace(/"/g, '""');
+          return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s + '"' : s;
+        }).join(',') + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'actividades_prevencion_' + new Date().toISOString().split('T')[0] + '.csv';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
     function esc(s) {
       if (!s) return '-';
       const d = document.createElement('div');
       d.textContent = s;
       return d.innerHTML;
     }
+
+    // Modal registro de charlas
+    const GOOGLE_FORM_ACT_URL = "https://docs.google.com/forms/d/e/1FAIpQLSd_L16INQ2F6KEVUAPzGYQXTJ16BSbH7ZaDrxSYHoIYV-4ksw/formResponse";
+    const ACT_FIELD_MAP = {
+      fecha_act: "entry.1524615584",
+      funcionario: "entry.1038733003",
+      tipo_act: "entry.1612534449",
+      lugar: "entry.1575048625",
+      funcionarios_cant: "entry.1253761096",
+      novedades: "entry.1542294810",
+      estatus: "entry.997371506",
+    };
+
+    const modalOverlay = document.getElementById('modalOverlay');
+    const btnRegistrar = document.getElementById('btnRegistrar');
+    const btnCancelar = document.getElementById('btnModalCancelar');
+    const actForm = document.getElementById('actividadForm');
+    const modalMsg = document.getElementById('modalMsg');
+    const btnSubmit = document.getElementById('btnModalSubmit');
+
+    btnRegistrar.addEventListener('click', () => {
+      modalOverlay.classList.add('open');
+      modalMsg.textContent = '';
+    });
+
+    btnCancelar.addEventListener('click', () => {
+      modalOverlay.classList.remove('open');
+    });
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) modalOverlay.classList.remove('open');
+    });
+
+    actForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Enviando...';
+      modalMsg.innerHTML = '<span style="color:var(--on-surface-variant);">Enviando...</span>';
+
+      try {
+        const fd = new FormData(actForm);
+        const body = new FormData();
+        for (const [field, entryId] of Object.entries(ACT_FIELD_MAP)) {
+          const value = fd.get(field);
+          if (value) body.append(entryId, value);
+        }
+        await fetch(GOOGLE_FORM_ACT_URL, { method: "POST", mode: "no-cors", body });
+        actForm.reset();
+        modalMsg.innerHTML = '<span style="color:#16a34a;font-weight:600;">✓ Registro guardado correctamente</span>';
+        setTimeout(() => {
+          modalOverlay.classList.remove('open');
+          modalMsg.textContent = '';
+          fetchActividades().then(() => renderActividades());
+        }, 1500);
+      } catch {
+        modalMsg.innerHTML = '<span style="color:var(--error);">Error de conexión. Intente nuevamente.</span>';
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Guardar Registro';
+      }
+    });
   </script>
 </body>
 </html>

@@ -36,6 +36,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDaQfeXK0O1DUvYR584z_9lcZNNIDuuIM09IwoGebqULR5Ut1l_DB2pkoep45mb697LSjzJOIMUnTD/pub?output=csv"
 
+CSV_ACTIVIDADES_URL = "https://docs.google.com/spreadsheets/d/1lG90_0On4vvaQ_Jxr1DWuZfOmz_8Y78jUDf1xInWiY8/export?format=csv&gid=1794869360"
+
 HEADER_MAP = {
     'Marca temporal': 'fecha_solicitud',
     'Nombre del Solicitante.': 'solicitante',
@@ -47,6 +49,17 @@ HEADER_MAP = {
     'Fecha Sugerida para la Actividad.': 'fecha_actividad',
     'Cantidad Estimada de Asistentes.': 'asistentes',
     '¿A qué público objetivo está dirigida la actividad?': 'publico',
+}
+
+HEADER_MAP_ACTIVIDADES = {
+    'Marca temporal': 'fecha_registro',
+    'Fecha de Actividad': 'fecha_actividad',
+    'Tipo de Actividad': 'tipo_actividad',
+    'Lugar / Comunidad / Sector': 'lugar',
+    'Cantidad de funcionarios Desplegados': 'funcionarios',
+    'Novedades / Resumen de la Actividad': 'novedades',
+    'Estatus de la Actividad': 'estatus',
+    'Nombre del funcionario Responsable': 'funcionario',
 }
 
 MES_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
@@ -237,6 +250,39 @@ def admin_data():
         obj['asistentes'] = int(obj.get('asistentes', 0) or 0)
         rows.append(obj)
     return jsonify({'rows': rows, 'total': len(rows)})
+
+@app.route('/api/admin/actividades')
+def admin_actividades():
+    if not session.get('admin_auth'):
+        return jsonify({'error': 'No autorizado'}), 401
+    try:
+        res = requests.get(CSV_ACTIVIDADES_URL, timeout=15)
+        res.raise_for_status()
+        res.encoding = 'utf-8'
+        reader = csv.DictReader(io.StringIO(res.text))
+    except Exception:
+        return jsonify({'error': 'No se pudieron obtener los datos.'}), 502
+    rows = []
+    for row in reader:
+        if not row.get('Marca temporal', '').strip():
+            continue
+        obj = {}
+        for raw_key, val in row.items():
+            key = HEADER_MAP_ACTIVIDADES.get(raw_key.strip())
+            if key:
+                obj[key] = (val or '').strip()
+        obj['funcionarios'] = int(obj.get('funcionarios', 0) or 0)
+        rows.append(obj)
+    completadas = sum(1 for r in rows if r.get('estatus', '').lower() == 'completado')
+    en_proceso = sum(1 for r in rows if r.get('estatus', '').lower() == 'en proceso')
+    total_funcionarios = sum(r['funcionarios'] for r in rows)
+    return jsonify({
+        'rows': rows,
+        'total': len(rows),
+        'completadas': completadas,
+        'en_proceso': en_proceso,
+        'total_funcionarios': total_funcionarios,
+    })
 
 @app.route('/login/logout')
 def admin_logout():
