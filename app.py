@@ -27,6 +27,9 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SECURE'] = os.getenv('RENDER', '').lower() == 'true'
 
 app.secret_key = os.getenv('FLASK_SECRET_KEY', secrets.token_hex(32))
 if 'FLASK_SECRET_KEY' not in os.environ:
