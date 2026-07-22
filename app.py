@@ -1,10 +1,7 @@
 import os
 import secrets
-import csv
-import io
 import logging
 from datetime import timedelta
-import requests
 from dotenv import load_dotenv
 from flask import Flask, request, session, redirect, render_template, send_from_directory, jsonify
 from flask_limiter import Limiter
@@ -44,19 +41,6 @@ if not ADMIN_PASSWORD_HASHES:
     raise RuntimeError("ADMIN_PASSWORD_HASH no configurado en .env. Genera uno con: python -c \"from werkzeug.security import generate_password_hash; print(generate_password_hash('tu-password'))\"")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-CSV_ACTIVIDADES_URL = "https://docs.google.com/spreadsheets/d/1lG90_0On4vvaQ_Jxr1DWuZfOmz_8Y78jUDf1xInWiY8/export?format=csv&gid=1794869360"
-
-HEADER_MAP_ACTIVIDADES = {
-    'Marca temporal': 'fecha_registro',
-    'Fecha de Actividad': 'fecha_actividad',
-    'Tipo de Actividad': 'tipo_actividad',
-    'Lugar / Comunidad / Sector': 'lugar',
-    'Cantidad de funcionarios Desplegados': 'funcionarios',
-    'Novedades / Resumen de la Actividad': 'novedades',
-    'Estatus de la Actividad': 'estatus',
-    'Nombre del funcionario Responsable': 'funcionario',
-}
 
 MES_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
@@ -323,27 +307,8 @@ def admin_actividades():
         except Exception as e:
             return jsonify({'error': f'Error al crear actividad: {e}'}), 400
 
-    # GET: merge CSV data + Turso data
-    try:
-        res = requests.get(CSV_ACTIVIDADES_URL, timeout=15)
-        res.raise_for_status()
-        res.encoding = 'utf-8'
-        reader = csv.DictReader(io.StringIO(res.text))
-    except Exception:
-        reader = []
+    # GET: Turso actividades only
     rows = []
-    for row in reader:
-        if not row.get('Marca temporal', '').strip():
-            continue
-        obj = {}
-        for raw_key, val in row.items():
-            key = HEADER_MAP_ACTIVIDADES.get(raw_key.strip())
-            if key:
-                obj[key] = (val or '').strip()
-        obj['funcionarios'] = int(obj.get('funcionarios', 0) or 0)
-        obj['source'] = 'csv'
-        rows.append(obj)
-    # Add Turso actividades
     for a in db.list_actividades_turso():
         rows.append({
             'id': a['id'],
