@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 from flask import Flask, request, session, redirect, render_template, send_from_directory, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
+import db
 
 load_dotenv()
 
@@ -203,6 +204,23 @@ def api_kpis():
     })
 
 # ---------------------------------------------------------------------------
+# Auth helpers
+# ---------------------------------------------------------------------------
+
+def login_required(roles=None):
+    def decorator(f):
+        from functools import wraps
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            if not session.get('user'):
+                return redirect('/login')
+            if roles and session['user'].get('role') not in roles:
+                return jsonify({'error': 'No autorizado'}), 403
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
+
+# ---------------------------------------------------------------------------
 # Admin routes
 # ---------------------------------------------------------------------------
 
@@ -216,24 +234,35 @@ def login():
             return render_template('admin_login.html', error=True, csrf_token=generate_csrf_token())
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
-        if email == ADMIN_EMAIL and any(check_password_hash(h, password) for h in ADMIN_PASSWORD_HASHES):
-            session['admin_auth'] = True
+
+        # 1. Try Turso
+        user = db.get_user_by_email(email)
+        if user and check_password_hash(user['password_hash'], password):
+            session['user'] = {'id': user['id'], 'email': user['email'], 'name': user['name'], 'role': user['role']}
             session.permanent = True
-            logger.info(f"Login exitoso desde {ip}")
+            logger.info(f"Login exitoso (Turso) para '{email}' rol={user['role']} desde {ip}")
             return redirect('/login/dashboard')
+
+        # 2. Fallback superadmin (env vars)
+        if email == ADMIN_EMAIL and any(check_password_hash(h, password) for h in ADMIN_PASSWORD_HASHES):
+            session['user'] = {'email': ADMIN_EMAIL, 'name': 'Administrador', 'role': 'admin', 'is_superadmin': True}
+            session.permanent = True
+            logger.info(f"Login exitoso (superadmin) desde {ip}")
+            return redirect('/login/dashboard')
+
         logger.warning(f"Login fallido para '{email}' desde {ip}")
         return render_template('admin_login.html', error=True, csrf_token=generate_csrf_token())
     return render_template('admin_login.html', csrf_token=generate_csrf_token())
 
 @app.route('/login/dashboard')
 def admin_dashboard():
-    if not session.get('admin_auth'):
+    if not session.get('user'):
         return redirect('/login')
     return render_template('admin.html')
 
 @app.route('/api/admin/data')
 def admin_data():
-    if not session.get('admin_auth'):
+    if not session.get('user'):
         return jsonify({'error': 'No autorizado'}), 401
     try:
         res = requests.get(CSV_URL, timeout=15)
@@ -257,7 +286,7 @@ def admin_data():
 
 @app.route('/api/admin/actividades')
 def admin_actividades():
-    if not session.get('admin_auth'):
+    if not session.get('user'):
         return jsonify({'error': 'No autorizado'}), 401
     try:
         res = requests.get(CSV_ACTIVIDADES_URL, timeout=15)
@@ -288,9 +317,53 @@ def admin_actividades():
         'total_funcionarios': total_funcionarios,
     })
 
+@app.route('/api/admin/me')
+def admin_me():
+    if not session.get('user'):
+        return jsonify({'error': 'No autorizado'}), 401
+    return jsonify(session['user'])
+
+# ---------------------------------------------------------------------------
+# Admin: user management (admin only)
+# ---------------------------------------------------------------------------
+
+@app.route('/api/admin/users', methods=['GET', 'POST'])
+def admin_users():
+    if not session.get('user') or session['user'].get('role') not in ('admin', 'superadmin'):
+        return jsonify({'error': 'No autorizado'}), 403
+    if request.method == 'GET':
+        return jsonify({'users': db.list_users()})
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Datos requeridos'}), 400
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '')
+    name = data.get('name', '').strip()
+    role = data.get('role', 'worker')
+    if not email or not password or not name:
+        return jsonify({'error': 'email, password y name son requeridos'}), 400
+    if role not in ('admin', 'worker', 'visitor'):
+        return jsonify({'error': 'Rol inválido'}), 400
+    try:
+        db.create_user(email, password, name, role)
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': f'Error al crear usuario: {e}'}), 400
+
+@app.route('/api/admin/users/<int:user_id>', methods=['PUT', 'DELETE'])
+def admin_user(user_id):
+    if not session.get('user') or session['user'].get('role') not in ('admin', 'superadmin'):
+        return jsonify({'error': 'No autorizado'}), 403
+    if request.method == 'DELETE':
+        db.delete_user(user_id)
+        return jsonify({'ok': True})
+    data = request.get_json()
+    db.update_user(user_id, email=data.get('email'), password=data.get('password'), name=data.get('name'), role=data.get('role'), active=data.get('active'))
+    return jsonify({'ok': True})
+
 @app.route('/login/logout')
 def admin_logout():
-    session.pop('admin_auth', None)
+    session.pop('user', None)
     return redirect('/')
 
 if __name__ == '__main__':
