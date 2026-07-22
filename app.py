@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from flask import Flask, request, session, redirect, render_template, send_from_directory, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from werkzeug.security import check_password_hash
 
 load_dotenv()
 
@@ -30,7 +31,10 @@ if 'FLASK_SECRET_KEY' not in os.environ:
 limiter = Limiter(get_remote_address, app=app, default_limits=[], storage_uri="memory://")
 
 ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', '').strip().lower()
-ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '')
+ADMIN_PASSWORD_HASHES = [h.strip() for h in os.getenv('ADMIN_PASSWORD_HASH', '').split(',') if h.strip()]
+
+if not ADMIN_PASSWORD_HASHES:
+    raise RuntimeError("ADMIN_PASSWORD_HASH no configurado en .env. Genera uno con: python -c \"from werkzeug.security import generate_password_hash; print(generate_password_hash('tu-password'))\"")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -212,7 +216,7 @@ def login():
             return render_template('admin_login.html', error=True, csrf_token=generate_csrf_token())
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
-        if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
+        if email == ADMIN_EMAIL and any(check_password_hash(h, password) for h in ADMIN_PASSWORD_HASHES):
             session['admin_auth'] = True
             session.permanent = True
             logger.info(f"Login exitoso desde {ip}")
