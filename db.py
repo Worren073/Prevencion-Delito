@@ -1,5 +1,6 @@
 import os
 import logging
+from functools import wraps
 from werkzeug.security import generate_password_hash
 
 logger = logging.getLogger(__name__)
@@ -56,6 +57,19 @@ def _init_schema():
     if TURSO_URL:
         conn.sync()
 
+def _with_retry(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except ValueError as e:
+            if "Hrana" in str(e) or "stream" in str(e):
+                close_conn()
+                return fn(*args, **kwargs)
+            raise
+    return wrapper
+
+@_with_retry
 def get_user_by_email(email):
     rows = get_conn().execute(
         "SELECT id, email, password_hash, name, role, active FROM users WHERE email = ? AND active = 1",
@@ -66,12 +80,14 @@ def get_user_by_email(email):
         return {"id": r[0], "email": r[1], "password_hash": r[2], "name": r[3], "role": r[4], "active": r[5]}
     return None
 
+@_with_retry
 def list_users():
     rows = get_conn().execute(
         "SELECT id, email, name, role, active, created_at FROM users ORDER BY created_at DESC"
     ).fetchall()
     return [{"id": r[0], "email": r[1], "name": r[2], "role": r[3], "active": r[4], "created_at": r[5]} for r in rows]
 
+@_with_retry
 def create_user(email, password, name, role):
     conn = get_conn()
     pw_hash = generate_password_hash(password)
@@ -82,6 +98,7 @@ def create_user(email, password, name, role):
     if TURSO_URL:
         conn.sync()
 
+@_with_retry
 def update_user(user_id, email=None, password=None, name=None, role=None, active=None):
     conn = get_conn()
     sets = []
@@ -104,6 +121,7 @@ def update_user(user_id, email=None, password=None, name=None, role=None, active
     if TURSO_URL:
         conn.sync()
 
+@_with_retry
 def delete_user(user_id):
     conn = get_conn()
     conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
