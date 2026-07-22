@@ -71,8 +71,8 @@ def add_security_headers(response):
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Content-Security-Policy'] = (
         "default-src 'self';"
-        "script-src 'self' https://www.gstatic.com https://www.google.com https://cdnjs.cloudflare.com https://fonts.googleapis.com 'unsafe-inline';"
-        "style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://www.gstatic.com 'unsafe-inline';"
+        "script-src 'self' https://www.gstatic.com https://www.google.com https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.jsdelivr.net 'unsafe-inline';"
+        "style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://www.gstatic.com https://cdn.jsdelivr.net 'unsafe-inline';"
         "img-src 'self' data: https://www.gstatic.com;"
         "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://www.gstatic.com;"
         "connect-src 'self' https://docs.google.com;"
