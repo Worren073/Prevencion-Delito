@@ -6,6 +6,8 @@
   <title>Panel Administrativo - Prevención del Delito</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
   <script src="https://www.gstatic.com/charts/loader.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -143,6 +145,12 @@
       font-weight: 600; cursor: pointer; transition: background 0.15s; white-space: nowrap;
     }
     .btn-accept:hover { background: #15803d; }
+    .btn-delete {
+      height: 28px; padding: 0 10px; border: none; border-radius: 6px;
+      background: #dc2626; color: #fff; font: inherit; font-size: 0.6875rem;
+      font-weight: 600; cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-delete:hover { background: #b91c1c; }
     .btn-complete {
       height: 28px; padding: 0 12px; border: none; border-radius: 6px;
       background: #2563eb; color: #fff; font: inherit; font-size: 0.6875rem;
@@ -156,6 +164,14 @@
     .badge-completado {
       display: inline-block; padding: 2px 10px; border-radius: 10px;
       background: #dcfce7; color: #166534; font-size: 0.6875rem; font-weight: 600;
+    }
+    .badge-aceptada {
+      display: inline-block; padding: 2px 10px; border-radius: 10px;
+      background: #dbeafe; color: #1e40af; font-size: 0.6875rem; font-weight: 600;
+    }
+    .badge-declinada {
+      display: inline-block; padding: 2px 10px; border-radius: 10px;
+      background: #fee2e2; color: #991b1b; font-size: 0.6875rem; font-weight: 600;
     }
     .sidebar-overlay {
       display: none;
@@ -574,6 +590,46 @@
     </div>
   </div>
 
+  <!-- Modal: Motivo de Declinación -->
+  <div class="modal-overlay" id="declineModalOverlay">
+    <div class="modal-card">
+      <h2>Declinar Solicitud</h2>
+      <p style="font-size:0.8125rem;color:var(--on-surface-variant);margin-bottom:16px;">Indica el motivo por el cual se declina esta solicitud:</p>
+      <form id="declineForm">
+        <label for="declineMotivo">Motivo</label>
+        <textarea name="motivo" id="declineMotivo" rows="3" placeholder="Ej: Fecha no disponible, solicitud duplicada, requiere documentación adicional..." required style="width:100%;padding:10px 12px;border:1px solid var(--outline-variant);border-radius:8px;font:inherit;font-size:0.8125rem;resize:vertical;"></textarea>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="btnDeclineCancel">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btnDeclineSubmit" style="background:#dc2626;">Declinar Solicitud</button>
+        </div>
+        <div class="modal-msg" id="declineModalMsg"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Ver Motivo de Declinación -->
+  <div class="modal-overlay" id="motivoModalOverlay">
+    <div class="modal-card">
+      <h2>Motivo de Declinación</h2>
+      <div id="motivoModalBody" style="font-size:0.875rem;color:var(--on-surface);line-height:1.6;padding:8px 0;"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="btnMotivoClose">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmar Eliminación -->
+  <div class="modal-overlay" id="confirmModalOverlay">
+    <div class="modal-card" style="max-width:360px;">
+      <h2 id="confirmModalTitle">Confirmar</h2>
+      <p id="confirmModalBody" style="font-size:0.875rem;color:var(--on-surface);margin:12px 0 20px;"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="btnConfirmCancel">Cancelar</button>
+        <button type="button" class="btn-primary" id="btnConfirmOk" style="background:#dc2626;">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let currentUser = null;
     let data = [];
@@ -583,6 +639,7 @@
     let sortDir = 'asc';
     let searchTerm = '';
     let revealObserver = null;
+    let _pendingSolicitudId = null;
 
     function initRevealObserver() {
       if (revealObserver) return;
@@ -618,6 +675,7 @@
         document.getElementById('loadingDashboard')?.remove();
         renderSolicitudes();
         initRevealObserver();
+        window.notyf = new Notyf({ duration: 3500, position: { x: 'right', y: 'top' }, ripple: false });
         observeReveals();
       } catch (e) {
         const el = document.getElementById('loadingDashboard');
@@ -733,7 +791,7 @@
         </div>
         <div class="table-wrapper reveal"><div class="table-scroll">
           <table id="mainTable"><thead><tr>
-            <th data-col="fecha_solicitud">Fecha Solic. <span class="sort-icon">${sortCol === 'fecha_solicitud' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
+            <th data-col="created_at">Fecha Solic. <span class="sort-icon">${sortCol === 'created_at' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
             <th data-col="solicitante">Solicitante <span class="sort-icon">${sortCol === 'solicitante' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
             <th data-col="telefono">Teléfono <span class="sort-icon">${sortCol === 'telefono' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
             <th data-col="tipo_entidad">Entidad <span class="sort-icon">${sortCol === 'tipo_entidad' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
@@ -743,6 +801,7 @@
             <th data-col="fecha_actividad">Fecha Activ. <span class="sort-icon">${sortCol === 'fecha_actividad' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
             <th data-col="asistentes" style="text-align:right;">Asistentes <span class="sort-icon">${sortCol === 'asistentes' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
             <th data-col="publico">Público <span class="sort-icon">${sortCol === 'publico' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
+            <th>Estatus</th>
             <th>Acción</th>
           </tr></thead><tbody id="tableBody"></tbody></table>
         </div></div>
@@ -786,13 +845,21 @@
       const count = document.getElementById('resultCount');
       if (count) count.textContent = `${filteredData.length} de ${data.length} registros`;
       if (filteredData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:#888;">No se encontraron registros.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:#888;">No se encontraron registros.</td></tr>';
         return;
       }
       let html = '';
       filteredData.slice().reverse().forEach((r, i) => {
         const idx = filteredData.length - 1 - i;
-        html += '<tr><td>' + (r.fecha_solicitud?.split(' ')[0] || '-') + '</td><td><strong>' + esc(r.solicitante) + '</strong></td><td>' + esc(r.telefono) + '</td><td>' + esc(r.tipo_entidad) + '</td><td>' + esc(r.comunidad) + '</td><td>' + esc(r.parroquia) + '</td><td>' + esc(r.tema) + '</td><td>' + (r.fecha_actividad || '-') + '</td><td style="text-align:right;">' + r.asistentes + '</td><td>' + esc(r.publico) + '</td><td><button class="btn-accept" onclick="aceptarSolicitud(' + idx + ')">✓ Aceptar</button></td></tr>';
+        const estatus = r.estatus || 'pendiente';
+        let badges = '';
+        if (estatus === 'aceptada') badges = '<span class="badge-aceptada">Aceptada</span>';
+        else if (estatus === 'declinada') badges = '<span class="badge-declinada">Declinada</span>';
+        let acciones = '';
+        if (estatus === 'pendiente') {
+          acciones = '<button class="btn-accept" onclick="aceptarSolicitud(' + r.id + ')">✓ Aceptar</button> <button class="btn-delete" onclick="declinarSolicitud(' + r.id + ')" title="Declinar">✕</button>';
+        }
+        html += '<tr><td>' + (r.created_at?.split(' ')[0] || '-') + '</td><td><strong>' + esc(r.solicitante) + '</strong></td><td>' + esc(r.telefono) + '</td><td>' + esc(r.tipo_entidad) + '</td><td>' + esc(r.comunidad) + '</td><td>' + esc(r.parroquia) + '</td><td>' + esc(r.tema) + '</td><td>' + (r.fecha_actividad || '-') + '</td><td style="text-align:right;">' + (r.asistentes || 0) + '</td><td>' + esc(r.publico) + '</td><td>' + badges + '</td><td style="white-space:nowrap;">' + acciones + '</td></tr>';
       });
       tbody.innerHTML = html;
     }
@@ -813,7 +880,7 @@
         }
         grouped[key].count++;
         if (r.tema && !grouped[key].temas.includes(r.tema)) grouped[key].temas.push(r.tema);
-        if (r.fecha_solicitud) grouped[key].fechas.push(r.fecha_solicitud.split(' ')[0]);
+        if (r.created_at) grouped[key].fechas.push(r.created_at.split(' ')[0]);
       });
       const sorted = Object.values(grouped).sort((a, b) => b.count - a.count);
       if (sorted.length === 0) {
@@ -868,15 +935,15 @@
       if (!el) return;
       const counts = {};
       data.forEach(r => {
-        if (!r.fecha_solicitud) return;
-        const parts = r.fecha_solicitud.split(/[/ :]/);
+        if (!r.created_at) return;
+        const parts = r.created_at.split(/[- :]/);
         if (parts.length < 3) return;
-        const month = parts[1].padStart(2, '0');
-        const year = parts[2];
+        const month = parts[1];
+        const year = parts[0];
         const key = year + '-' + month;
         if (!counts[key]) {
           const names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-          counts[key] = { label: names[parseInt(parts[1]) - 1] + ' ' + year, count: 0 };
+          counts[key] = { label: names[parseInt(month) - 1] + ' ' + year, count: 0 };
         }
         counts[key].count++;
       });
@@ -922,7 +989,7 @@
     function exportCSV() {
       if (data.length === 0) return;
       const headers = ['Fecha Solicitud','Solicitante','Teléfono','Tipo Entidad','Comunidad/Escuela','Parroquia/Zona','Tema','Fecha Actividad','Asistentes','Público Objetivo'];
-      const rows = data.map(r => [r.fecha_solicitud || '', r.solicitante || '', r.telefono || '', r.tipo_entidad || '', r.comunidad || '', r.parroquia || '', r.tema || '', r.fecha_actividad || '', r.asistentes, r.publico || '']);
+      const rows = data.map(r => [r.created_at || '', r.solicitante || '', r.telefono || '', r.tipo_entidad || '', r.comunidad || '', r.parroquia || '', r.tema || '', r.fecha_actividad || '', r.asistentes, r.publico || '']);
       let csv = '\uFEFF' + headers.join(',') + '\n';
       rows.forEach(row => {
         csv += row.map(v => {
@@ -971,6 +1038,12 @@
             <th>Acción</th>
           </tr></thead><tbody id="actTableBody"></tbody></table>
         </div></div>
+        <h3 class="reveal" style="margin-top:32px;font-size:1rem;font-weight:600;color:var(--primary);">Solicitudes Declinadas</h3>
+        <div class="table-wrapper reveal"><div class="table-scroll">
+          <table><thead><tr>
+            <th>Fecha</th><th>Solicitante</th><th>Teléfono</th><th>Comunidad</th><th>Tema</th><th>Motivo</th><th>Acción</th>
+          </tr></thead><tbody id="declinadasTableBody"></tbody></table>
+        </div></div>
       `;
       renderActividades();
       bindActividadesEvents();
@@ -1017,6 +1090,25 @@
         html += '<tr><td>' + (r.fecha_registro?.split(' ')[0] || '-') + '</td><td>' + (r.fecha_actividad || '-') + '</td><td><strong>' + esc(r.funcionario) + '</strong></td><td>' + esc(r.tipo_actividad) + '</td><td>' + esc(r.lugar) + '</td><td style="text-align:right;">' + (r.funcionarios || 0) + '</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + esc(r.novedades) + '">' + esc(r.novedades) + '</td><td>' + badge + '</td><td>' + acciones + '</td></tr>';
       });
       tbody.innerHTML = html;
+      renderDeclinadas();
+    }
+
+    function renderDeclinadas() {
+      const tbody = document.getElementById('declinadasTableBody');
+      if (!tbody) return;
+      const declinadas = data.filter(r => r.estatus === 'declinada');
+      if (declinadas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#888;">No hay solicitudes declinadas.</td></tr>';
+        return;
+      }
+      let html = '';
+      declinadas.slice().reverse().forEach(r => {
+        html += '<tr><td>' + (r.created_at?.split(' ')[0] || '-') + '</td><td><strong>' + esc(r.solicitante) + '</strong></td><td>' + esc(r.telefono) + '</td><td>' + esc(r.comunidad) + '</td><td>' + esc(r.tema) + '</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(r.motivo || '') + '</td><td><button class="btn-delete btn-ver-motivo" data-motivo="' + esc(r.motivo || '') + '">Ver Motivo</button></td></tr>';
+      });
+      tbody.innerHTML = html;
+      tbody.querySelectorAll('.btn-ver-motivo').forEach(btn => {
+        btn.addEventListener('click', () => verMotivo(btn.dataset.motivo));
+      });
     }
 
     function exportActCSV() {
@@ -1084,16 +1176,19 @@
 
     btnCancelar.addEventListener('click', () => {
       modalOverlay.classList.remove('open');
+      _pendingSolicitudId = null;
     });
 
     modalOverlay.addEventListener('click', (e) => {
       if (e.target === modalOverlay) modalOverlay.classList.remove('open');
+      _pendingSolicitudId = null;
     });
 
     // Aceptar solicitud → pre-fill modal with solicitud data
-    window.aceptarSolicitud = function(idx) {
-      const r = filteredData[idx];
+    window.aceptarSolicitud = function(sid) {
+      const r = data.find(d => d.id === sid);
       if (!r) return;
+      _pendingSolicitudId = sid;
       openRegistrarModal({
         fecha_act: r.fecha_actividad || '',
         funcionario: r.solicitante || '',
@@ -1106,20 +1201,84 @@
       });
     };
 
-    window.completarActividad = async function(actId) {
-      if (!confirm('¿Marcar esta actividad como completada?')) return;
+    window.declinarSolicitud = function(sid) {
+      _pendingSolicitudId = sid;
+      document.getElementById('declineMotivo').value = '';
+      document.getElementById('declineModalMsg').textContent = '';
+      document.getElementById('declineModalOverlay').classList.add('open');
+    };
+
+    // Decline modal handlers
+    document.getElementById('declineForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const motivo = document.getElementById('declineMotivo').value.trim();
+      if (!motivo) return;
+      const btn = document.getElementById('btnDeclineSubmit');
+      btn.disabled = true; btn.textContent = 'Declinando...';
       try {
-        const res = await fetch('/api/admin/actividades/' + actId + '/status', {
+        const res = await fetch('/api/admin/solicitudes/' + _pendingSolicitudId + '/status', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ estatus: 'Completado' }),
+          body: JSON.stringify({ estatus: 'declinada', motivo }),
         });
-        if (!res.ok) { alert('Error al actualizar'); return; }
-        await fetchActividades();
+        if (!res.ok) { notyf.error('Error al actualizar'); return; }
+        document.getElementById('declineModalOverlay').classList.remove('open');
+        notyf.success('Solicitud declinada');
+        _pendingSolicitudId = null;
+        await fetchData();
+        applyFilters();
+        renderTableBody();
         if (document.getElementById('actividadesContent').innerHTML) {
           renderActividadesSection();
         }
-      } catch (e) { alert('Error de conexión'); }
+      } catch (e) { notyf.error('Error de conexión'); }
+      finally { btn.disabled = false; btn.textContent = 'Declinar Solicitud'; }
+    });
+
+    document.getElementById('btnDeclineCancel').addEventListener('click', () => {
+      document.getElementById('declineModalOverlay').classList.remove('open');
+      _pendingSolicitudId = null;
+    });
+
+    document.getElementById('declineModalOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        document.getElementById('declineModalOverlay').classList.remove('open');
+        _pendingSolicitudId = null;
+      }
+    });
+
+    // Ver motivo modal
+    window.verMotivo = function(motivo) {
+      document.getElementById('motivoModalBody').textContent = motivo;
+      document.getElementById('motivoModalOverlay').classList.add('open');
+    };
+
+    document.getElementById('btnMotivoClose').addEventListener('click', () => {
+      document.getElementById('motivoModalOverlay').classList.remove('open');
+    });
+
+    document.getElementById('motivoModalOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        document.getElementById('motivoModalOverlay').classList.remove('open');
+      }
+    });
+
+    window.completarActividad = function(actId) {
+      confirmAction('Completar Actividad', '¿Marcar esta actividad como completada?', async () => {
+        try {
+          const res = await fetch('/api/admin/actividades/' + actId + '/status', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estatus: 'Completado' }),
+          });
+          if (!res.ok) { notyf.error('Error al actualizar'); return; }
+          notyf.success('Actividad completada');
+          await fetchActividades();
+          if (document.getElementById('actividadesContent').innerHTML) {
+            renderActividadesSection();
+          }
+        } catch (e) { notyf.error('Error de conexión'); }
+      }, 'Completar');
     };
 
     actForm.addEventListener('submit', async (e) => {
@@ -1151,6 +1310,20 @@
         }
         actForm.reset();
         modalMsg.innerHTML = '<span style="color:#16a34a;font-weight:600;">✓ Registro guardado correctamente</span>';
+        notyf.success('Actividad registrada');
+        if (_pendingSolicitudId) {
+          try {
+            await fetch('/api/admin/solicitudes/' + _pendingSolicitudId + '/status', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ estatus: 'aceptada' }),
+            });
+          } catch (_) { /* non-critical */ }
+          _pendingSolicitudId = null;
+          await fetchData();
+          applyFilters();
+          renderTableBody();
+        }
         setTimeout(() => {
           modalOverlay.classList.remove('open');
           modalMsg.textContent = '';
@@ -1242,13 +1415,38 @@
       userModalOverlay.classList.add('open');
     };
 
-    window.deleteUser = async function(userId) {
-      if (!confirm('¿Eliminar este usuario?')) return;
-      try {
-        const res = await fetch('/api/admin/users/' + userId, { method: 'DELETE' });
-        if (res.ok) { await loadUsers(); }
-        else { alert('Error al eliminar usuario'); }
-      } catch (e) { alert('Error de conexión'); }
+    // Confirm modal
+    let _confirmCallback = null;
+    const confirmOverlay = document.getElementById('confirmModalOverlay');
+    document.getElementById('btnConfirmOk').addEventListener('click', () => {
+      confirmOverlay.classList.remove('open');
+      if (_confirmCallback) _confirmCallback();
+      _confirmCallback = null;
+    });
+    document.getElementById('btnConfirmCancel').addEventListener('click', () => {
+      confirmOverlay.classList.remove('open');
+      _confirmCallback = null;
+    });
+    confirmOverlay.addEventListener('click', (e) => {
+      if (e.target === confirmOverlay) { confirmOverlay.classList.remove('open'); _confirmCallback = null; }
+    });
+
+    function confirmAction(title, body, cb, btnText) {
+      document.getElementById('confirmModalTitle').textContent = title;
+      document.getElementById('confirmModalBody').textContent = body;
+      document.getElementById('btnConfirmOk').textContent = btnText || 'Eliminar';
+      _confirmCallback = cb;
+      confirmOverlay.classList.add('open');
+    }
+
+    window.deleteUser = function(userId) {
+      confirmAction('Eliminar Usuario', '¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.', async () => {
+        try {
+          const res = await fetch('/api/admin/users/' + userId, { method: 'DELETE' });
+          if (res.ok) { await loadUsers(); notyf.success('Usuario eliminado'); }
+          else { notyf.error('Error al eliminar usuario'); }
+        } catch (e) { notyf.error('Error de conexión'); }
+      }, 'Eliminar');
     };
 
     btnUserCancel.addEventListener('click', () => { userModalOverlay.classList.remove('open'); });

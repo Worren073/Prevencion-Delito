@@ -45,22 +45,7 @@ if not ADMIN_PASSWORD_HASHES:
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDaQfeXK0O1DUvYR584z_9lcZNNIDuuIM09IwoGebqULR5Ut1l_DB2pkoep45mb697LSjzJOIMUnTD/pub?output=csv"
-
 CSV_ACTIVIDADES_URL = "https://docs.google.com/spreadsheets/d/1lG90_0On4vvaQ_Jxr1DWuZfOmz_8Y78jUDf1xInWiY8/export?format=csv&gid=1794869360"
-
-HEADER_MAP = {
-    'Marca temporal': 'fecha_solicitud',
-    'Nombre del Solicitante.': 'solicitante',
-    'Teléfono de Contacto': 'telefono',
-    'Tipo de Entidad': 'tipo_entidad',
-    'Nombre de comunidad O Escuela.': 'comunidad',
-    'Parroquia / Zona.': 'parroquia',
-    'Tema de charla Solicitada.': 'tema',
-    'Fecha Sugerida para la Actividad.': 'fecha_actividad',
-    'Cantidad Estimada de Asistentes.': 'asistentes',
-    '¿A qué público objetivo está dirigida la actividad?': 'publico',
-}
 
 HEADER_MAP_ACTIVIDADES = {
     'Marca temporal': 'fecha_registro',
@@ -141,24 +126,9 @@ def serve_src(filename):
 @app.route('/api/kpis')
 def api_kpis():
     try:
-        res = requests.get(CSV_URL, timeout=15)
-        res.raise_for_status()
-        res.encoding = 'utf-8'
-        reader = csv.DictReader(io.StringIO(res.text))
+        rows = db.list_solicitudes()
     except Exception:
         return jsonify({'error': 'No se pudieron obtener los datos.'}), 502
-
-    rows = []
-    for row in reader:
-        if not row.get('Marca temporal', '').strip():
-            continue
-        obj = {}
-        for raw_key, val in row.items():
-            key = HEADER_MAP.get(raw_key.strip())
-            if key:
-                obj[key] = (val or '').strip()
-        obj['asistentes'] = int(obj.get('asistentes', 0) or 0)
-        rows.append(obj)
 
     total = len(rows)
     beneficiarios = sum(r['asistentes'] for r in rows)
@@ -177,26 +147,21 @@ def api_kpis():
     tipo_entidad = count_by(lambda r: r.get('tipo_entidad'))
     parroquias_data = count_by(lambda r: r.get('parroquia'))
 
-    meses_counts = {}
+    meses = {}
     for r in rows:
-        fecha = r.get('fecha_solicitud', '')
+        fecha = r.get('created_at', '')
         if not fecha:
             continue
-        parts = fecha.split(' ')
-        date_parts = parts[0].split('/')
-        if len(date_parts) < 3:
-            continue
-        month = date_parts[1].zfill(2)
-        year = date_parts[2]
-        key = f"{year}-{month}"
-        if key not in meses_counts:
+        month = fecha[:7]
+        if month not in meses:
+            parts = month.split('-')
             try:
-                label = f"{MES_NAMES[int(date_parts[1]) - 1]} {year}"
-            except IndexError:
-                label = key
-            meses_counts[key] = {'label': label, 'count': 0}
-        meses_counts[key]['count'] += 1
-    meses = [meses_counts[k] for k in sorted(meses_counts.keys())]
+                label = f"{MES_NAMES[int(parts[1]) - 1]} {parts[0]}"
+            except (IndexError, ValueError):
+                label = month
+            meses[month] = {'label': label, 'count': 0}
+        meses[month]['count'] += 1
+    meses_list = [meses[k] for k in sorted(meses.keys())]
 
     return jsonify({
         'total': total,
@@ -205,7 +170,7 @@ def api_kpis():
         'parroquias': parroquias_count,
         'temas': temas,
         'tipo_entidad': tipo_entidad,
-        'meses': meses,
+        'meses': meses_list,
         'parroquias_data': parroquias_data,
     })
 
@@ -275,24 +240,57 @@ def admin_data():
     if not session.get('user'):
         return jsonify({'error': 'No autorizado'}), 401
     try:
-        res = requests.get(CSV_URL, timeout=15)
-        res.raise_for_status()
-        res.encoding = 'utf-8'
-        reader = csv.DictReader(io.StringIO(res.text))
-    except Exception:
-        return jsonify({'error': 'No se pudieron obtener los datos.'}), 502
-    rows = []
-    for row in reader:
-        if not row.get('Marca temporal', '').strip():
-            continue
-        obj = {}
-        for raw_key, val in row.items():
-            key = HEADER_MAP.get(raw_key.strip())
-            if key:
-                obj[key] = (val or '').strip()
-        obj['asistentes'] = int(obj.get('asistentes', 0) or 0)
-        rows.append(obj)
-    return jsonify({'rows': rows, 'total': len(rows)})
+        rows = db.list_solicitudes()
+        return jsonify({'rows': rows, 'total': len(rows)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ---------------------------------------------------------------------------
+# Public solicitud submission (replaces Google Forms)
+# ---------------------------------------------------------------------------
+
+@app.route('/api/solicitudes', methods=['POST'])
+def public_solicitud():
+    data = request.form
+    solicitante = data.get('solicitante', '').strip()
+    telefono = data.get('telefono', '').strip()
+    tipo_entidad = data.get('tipo_entidad', '').strip()
+    comunidad = data.get('comunidad', '').strip()
+    parroquia = data.get('parroquia', '').strip()
+    tema = data.get('tema', '').strip()
+    fecha_actividad = data.get('fecha_actividad', '').strip()
+    try:
+        asistentes = int(data.get('asistentes', 0))
+    except (ValueError, TypeError):
+        asistentes = 0
+    publico = data.get('publico', '').strip()
+
+    required = [solicitante, telefono, tipo_entidad, comunidad, parroquia, tema]
+    if not all(required):
+        return jsonify({'error': 'Campos requeridos faltantes'}), 400
+
+    try:
+        db.create_solicitud(solicitante, telefono, tipo_entidad, comunidad, parroquia, tema, fecha_actividad, asistentes, publico)
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/solicitudes/<int:sid>/status', methods=['PUT'])
+def admin_solicitud_status(sid):
+    if not session.get('user'):
+        return jsonify({'error': 'No autorizado'}), 401
+    if session['user'].get('role') not in ('admin', 'worker'):
+        return jsonify({'error': 'No autorizado'}), 403
+    data = request.get_json()
+    estatus = data.get('estatus')
+    if estatus not in ('pendiente', 'aceptada', 'declinada'):
+        return jsonify({'error': 'Estatus inválido'}), 400
+    motivo = data.get('motivo', '')
+    try:
+        db.update_solicitud_status(sid, estatus, motivo)
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 @app.route('/api/admin/actividades', methods=['GET', 'POST'])
 def admin_actividades():

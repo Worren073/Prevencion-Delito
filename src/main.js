@@ -86,18 +86,18 @@ document.querySelectorAll("a[href^=\"#\"]").forEach((anchor) => {
   });
 });
 
-const GOOGLE_FORM_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLScpc958TX2-5Re1W6cwiLF9eIpBs4jPLUwdNN67buoQYSsKBw/formResponse";
+const API_SOLICITUDES_URL = "/api/solicitudes";
 
 const FIELD_MAP = {
-  nombre: "entry.1096373761",
-  telefono: "entry.734686186",
-  tipo_entidad: "entry.727672707",
-  institucion: "entry.590929523",
-  zona: "entry.1109345739",
-  tema: "entry.921465563",
-  fecha: "entry.1298642196",
-  asistentes: "entry.748141868",
-  publico: "entry.593455377",
+  nombre: "solicitante",
+  telefono: "telefono",
+  tipo_entidad: "tipo_entidad",
+  institucion: "comunidad",
+  zona: "parroquia",
+  tema: "tema",
+  fecha: "fecha_actividad",
+  asistentes: "asistentes",
+  publico: "publico",
 };
 
 let isSubmitting = false;
@@ -131,12 +131,13 @@ form.addEventListener("submit", async (e) => {
 
   try {
     const fd = new FormData(form);
-    const body = new FormData();
-    for (const [field, entryId] of Object.entries(FIELD_MAP)) {
+    const body = new URLSearchParams();
+    for (const [field, apiField] of Object.entries(FIELD_MAP)) {
       const value = fd.get(field);
-      if (value) body.append(entryId, value);
+      if (value) body.append(apiField, value);
     }
-    await fetch(GOOGLE_FORM_URL, { method: "POST", mode: "no-cors", body });
+    const res = await fetch(API_SOLICITUDES_URL, { method: "POST", body });
+    if (!res.ok) throw new Error();
     form.reset();
     cooldownActive = true;
     successMsg.innerHTML = '<i class="fa-solid fa-circle-check mr-2"></i>¡Solicitud recibida! Nuestro equipo se comunicará con usted en breve.';
