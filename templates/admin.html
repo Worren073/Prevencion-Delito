@@ -137,6 +137,26 @@
     .sidebar-divider { border: none; border-top: 1px solid var(--outline-variant); margin: 8px 14px; }
     .sidebar-footer { display: none; }
     .sidebar-action { border-right: none !important; font-weight: 400 !important; }
+    .btn-accept {
+      height: 28px; padding: 0 12px; border: none; border-radius: 6px;
+      background: #16a34a; color: #fff; font: inherit; font-size: 0.6875rem;
+      font-weight: 600; cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-accept:hover { background: #15803d; }
+    .btn-complete {
+      height: 28px; padding: 0 12px; border: none; border-radius: 6px;
+      background: #2563eb; color: #fff; font: inherit; font-size: 0.6875rem;
+      font-weight: 600; cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-complete:hover { background: #1d4ed8; }
+    .badge-proceso {
+      display: inline-block; padding: 2px 10px; border-radius: 10px;
+      background: #fef3c7; color: #92400e; font-size: 0.6875rem; font-weight: 600;
+    }
+    .badge-completado {
+      display: inline-block; padding: 2px 10px; border-radius: 10px;
+      background: #dcfce7; color: #166534; font-size: 0.6875rem; font-weight: 600;
+    }
     .sidebar-overlay {
       display: none;
       position: fixed;
@@ -463,7 +483,7 @@
       <!-- SECCIÓN: Usuarios (admin only) -->
       <div id="contentUsuarios" class="section-content">
         <h2 class="reveal">Gestión de Usuarios</h2>
-        <div class="toolbar">
+        <div class="toolbar reveal">
           <button id="btnAddUser">+ Agregar Usuario</button>
           <span class="result-count" id="userCount"></span>
         </div>
@@ -481,6 +501,7 @@
     <div class="modal-card">
       <h2>Registrar Charla Realizada</h2>
       <form id="actividadForm">
+        <input type="hidden" name="solicitud_ref" id="actSolicitudRef" value="" />
         <label>Fecha de Actividad</label>
         <input type="date" name="fecha_act" required />
 
@@ -536,7 +557,6 @@
         <select name="role">
           <option value="worker">Trabajador</option>
           <option value="admin">Administrador</option>
-          <option value="visitor">Visitante</option>
         </select>
         <div id="userActiveField" style="display:none;margin-top:12px;">
           <div class="toggle-wrap">
@@ -616,11 +636,6 @@
         const info = document.getElementById('headerUserInfo');
         info.textContent = currentUser.name + ' · ' + currentUser.role;
         info.style.display = 'inline';
-        if (currentUser.role !== 'admin' && currentUser.role !== 'worker') {
-          document.getElementById('btnRegistrar').style.display = 'none';
-          const sb = document.getElementById('btnRegistrarSidebar');
-          if (sb) sb.style.display = 'none';
-        }
         const sidebarUsuarios = document.getElementById('sidebarUsuarios');
         if (currentUser.role === 'admin' || currentUser.role === 'superadmin') {
           sidebarUsuarios.style.display = 'flex';
@@ -728,6 +743,7 @@
             <th data-col="fecha_actividad">Fecha Activ. <span class="sort-icon">${sortCol === 'fecha_actividad' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
             <th data-col="asistentes" style="text-align:right;">Asistentes <span class="sort-icon">${sortCol === 'asistentes' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
             <th data-col="publico">Público <span class="sort-icon">${sortCol === 'publico' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
+            <th>Acción</th>
           </tr></thead><tbody id="tableBody"></tbody></table>
         </div></div>
         <h2 class="reveal">Dashboard Gráfico</h2>
@@ -770,12 +786,13 @@
       const count = document.getElementById('resultCount');
       if (count) count.textContent = `${filteredData.length} de ${data.length} registros`;
       if (filteredData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:#888;">No se encontraron registros.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:#888;">No se encontraron registros.</td></tr>';
         return;
       }
       let html = '';
-      filteredData.slice().reverse().forEach(r => {
-        html += '<tr><td>' + (r.fecha_solicitud?.split(' ')[0] || '-') + '</td><td><strong>' + esc(r.solicitante) + '</strong></td><td>' + esc(r.telefono) + '</td><td>' + esc(r.tipo_entidad) + '</td><td>' + esc(r.comunidad) + '</td><td>' + esc(r.parroquia) + '</td><td>' + esc(r.tema) + '</td><td>' + (r.fecha_actividad || '-') + '</td><td style="text-align:right;">' + r.asistentes + '</td><td>' + esc(r.publico) + '</td></tr>';
+      filteredData.slice().reverse().forEach((r, i) => {
+        const idx = filteredData.length - 1 - i;
+        html += '<tr><td>' + (r.fecha_solicitud?.split(' ')[0] || '-') + '</td><td><strong>' + esc(r.solicitante) + '</strong></td><td>' + esc(r.telefono) + '</td><td>' + esc(r.tipo_entidad) + '</td><td>' + esc(r.comunidad) + '</td><td>' + esc(r.parroquia) + '</td><td>' + esc(r.tema) + '</td><td>' + (r.fecha_actividad || '-') + '</td><td style="text-align:right;">' + r.asistentes + '</td><td>' + esc(r.publico) + '</td><td><button class="btn-accept" onclick="aceptarSolicitud(' + idx + ')">✓ Aceptar</button></td></tr>';
       });
       tbody.innerHTML = html;
     }
@@ -951,6 +968,7 @@
             <th data-act-col="funcionarios" style="text-align:right;">Func. Despl.</th>
             <th data-act-col="novedades">Novedades</th>
             <th data-act-col="estatus">Estatus</th>
+            <th>Acción</th>
           </tr></thead><tbody id="actTableBody"></tbody></table>
         </div></div>
       `;
@@ -985,13 +1003,18 @@
       const tbody = document.getElementById('actTableBody');
       if (!tbody) return;
       if (actividadesData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#888;">No hay actividades registradas.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#888;">No hay actividades registradas.</td></tr>';
         return;
       }
       let html = '';
-      actividadesData.slice().reverse().forEach(r => {
-        const estatusClass = r.estatus === 'Completado' ? '' : 'color:#f59e0b;font-weight:600;';
-        html += '<tr><td>' + (r.fecha_registro?.split(' ')[0] || '-') + '</td><td>' + (r.fecha_actividad || '-') + '</td><td><strong>' + esc(r.funcionario) + '</strong></td><td>' + esc(r.tipo_actividad) + '</td><td>' + esc(r.lugar) + '</td><td style="text-align:right;">' + (r.funcionarios || 0) + '</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + esc(r.novedades) + '">' + esc(r.novedades) + '</td><td style="' + estatusClass + '">' + esc(r.estatus) + '</td></tr>';
+      actividadesData.slice().reverse().forEach((r, i) => {
+        const idx = actividadesData.length - 1 - i;
+        const badge = r.estatus === 'Completado' ? '<span class="badge-completado">Completado</span>' : '<span class="badge-proceso">En Proceso</span>';
+        let acciones = '';
+        if (r.source === 'turso' && r.id && r.estatus === 'En Proceso') {
+          acciones = '<button class="btn-complete" onclick="completarActividad(' + r.id + ')">Completar</button>';
+        }
+        html += '<tr><td>' + (r.fecha_registro?.split(' ')[0] || '-') + '</td><td>' + (r.fecha_actividad || '-') + '</td><td><strong>' + esc(r.funcionario) + '</strong></td><td>' + esc(r.tipo_actividad) + '</td><td>' + esc(r.lugar) + '</td><td style="text-align:right;">' + (r.funcionarios || 0) + '</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + esc(r.novedades) + '">' + esc(r.novedades) + '</td><td>' + badge + '</td><td>' + acciones + '</td></tr>';
       });
       tbody.innerHTML = html;
     }
@@ -1027,17 +1050,6 @@
     // Modal: Registrar Charla
     // -----------------------------------------------------------------------
 
-    const GOOGLE_FORM_ACT_URL = "https://docs.google.com/forms/d/e/1FAIpQLSd_L16INQ2F6KEVUAPzGYQXTJ16BSbH7ZaDrxSYHoIYV-4ksw/formResponse";
-    const ACT_FIELD_MAP = {
-      fecha_act: "entry.1524615584",
-      funcionario: "entry.1038733003",
-      tipo_act: "entry.1612534449",
-      lugar: "entry.1575048625",
-      funcionarios_cant: "entry.1253761096",
-      novedades: "entry.1542294810",
-      estatus: "entry.997371506",
-    };
-
     const modalOverlay = document.getElementById('modalOverlay');
     const btnRegistrar = document.getElementById('btnRegistrar');
     const btnRegistrarSidebar = document.getElementById('btnRegistrarSidebar');
@@ -1046,13 +1058,29 @@
     const modalMsg = document.getElementById('modalMsg');
     const btnSubmit = document.getElementById('btnModalSubmit');
 
-    function openRegistrarModal() {
+    function openRegistrarModal(prefill) {
+      if (prefill) {
+        actForm.querySelector('[name="fecha_act"]').value = prefill.fecha_act || '';
+        actForm.querySelector('[name="funcionario"]').value = prefill.funcionario || '';
+        if (prefill.tipo_act) {
+          const radio = actForm.querySelector('[name="tipo_act"][value="' + prefill.tipo_act + '"]');
+          if (radio) radio.checked = true;
+        }
+        actForm.querySelector('[name="lugar"]').value = prefill.lugar || '';
+        actForm.querySelector('[name="funcionarios_cant"]').value = prefill.funcionarios_cant || '';
+        actForm.querySelector('[name="novedades"]').value = prefill.novedades || '';
+        if (prefill.estatus) {
+          const radio = actForm.querySelector('[name="estatus"][value="' + prefill.estatus + '"]');
+          if (radio) radio.checked = true;
+        }
+        actForm.querySelector('[name="solicitud_ref"]').value = prefill.solicitud_ref || '';
+      }
       modalOverlay.classList.add('open');
       modalMsg.textContent = '';
     }
 
-    btnRegistrar.addEventListener('click', openRegistrarModal);
-    if (btnRegistrarSidebar) btnRegistrarSidebar.addEventListener('click', openRegistrarModal);
+    btnRegistrar.addEventListener('click', () => openRegistrarModal());
+    if (btnRegistrarSidebar) btnRegistrarSidebar.addEventListener('click', () => openRegistrarModal());
 
     btnCancelar.addEventListener('click', () => {
       modalOverlay.classList.remove('open');
@@ -1062,6 +1090,38 @@
       if (e.target === modalOverlay) modalOverlay.classList.remove('open');
     });
 
+    // Aceptar solicitud → pre-fill modal with solicitud data
+    window.aceptarSolicitud = function(idx) {
+      const r = filteredData[idx];
+      if (!r) return;
+      openRegistrarModal({
+        fecha_act: r.fecha_actividad || '',
+        funcionario: r.solicitante || '',
+        tipo_act: 'Charla Express',
+        lugar: r.comunidad || '',
+        funcionarios_cant: r.asistentes || '',
+        novedades: 'Aceptada desde solicitud de ' + (r.solicitante || '') + '. Tema: ' + (r.tema || ''),
+        estatus: 'En Proceso',
+        solicitud_ref: r.solicitante + ' - ' + (r.tema || ''),
+      });
+    };
+
+    window.completarActividad = async function(actId) {
+      if (!confirm('¿Marcar esta actividad como completada?')) return;
+      try {
+        const res = await fetch('/api/admin/actividades/' + actId + '/status', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ estatus: 'Completado' }),
+        });
+        if (!res.ok) { alert('Error al actualizar'); return; }
+        await fetchActividades();
+        if (document.getElementById('actividadesContent').innerHTML) {
+          renderActividadesSection();
+        }
+      } catch (e) { alert('Error de conexión'); }
+    };
+
     actForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       btnSubmit.disabled = true;
@@ -1070,21 +1130,38 @@
 
       try {
         const fd = new FormData(actForm);
-        const body = new FormData();
-        for (const [field, entryId] of Object.entries(ACT_FIELD_MAP)) {
-          const value = fd.get(field);
-          if (value) body.append(entryId, value);
+        const body = {
+          fecha_actividad: fd.get('fecha_act'),
+          funcionario: fd.get('funcionario'),
+          tipo_actividad: fd.get('tipo_act'),
+          lugar: fd.get('lugar'),
+          funcionarios_cant: parseInt(fd.get('funcionarios_cant')) || 1,
+          novedades: fd.get('novedades'),
+          estatus: fd.get('estatus'),
+          solicitud_ref: fd.get('solicitud_ref') || '',
+        };
+        const res = await fetch('/api/admin/actividades', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Error al guardar');
         }
-        await fetch(GOOGLE_FORM_ACT_URL, { method: "POST", mode: "no-cors", body });
         actForm.reset();
         modalMsg.innerHTML = '<span style="color:#16a34a;font-weight:600;">✓ Registro guardado correctamente</span>';
         setTimeout(() => {
           modalOverlay.classList.remove('open');
           modalMsg.textContent = '';
-          fetchActividades().then(() => renderActividades());
+          fetchActividades().then(() => {
+            if (document.getElementById('actividadesContent').innerHTML) {
+              renderActividadesSection();
+            }
+          });
         }, 1500);
-      } catch {
-        modalMsg.innerHTML = '<span style="color:var(--error);">Error de conexión. Intente nuevamente.</span>';
+      } catch (e) {
+        modalMsg.innerHTML = '<span style="color:var(--error);">' + e.message + '</span>';
       } finally {
         btnSubmit.disabled = false;
         btnSubmit.textContent = 'Guardar Registro';

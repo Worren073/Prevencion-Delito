@@ -54,6 +54,21 @@ def _init_schema():
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS actividades (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fecha_actividad TEXT NOT NULL,
+            funcionario TEXT NOT NULL,
+            tipo_actividad TEXT NOT NULL,
+            lugar TEXT NOT NULL,
+            funcionarios_count INTEGER NOT NULL DEFAULT 0,
+            novedades TEXT DEFAULT '',
+            estatus TEXT NOT NULL DEFAULT 'En Proceso',
+            solicitud_ref TEXT DEFAULT '',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+    """)
     if TURSO_URL:
         conn.sync()
 
@@ -130,3 +145,34 @@ def delete_user(user_id):
     conn.commit()
     if TURSO_URL:
         conn.sync()
+
+# ---------------------------------------------------------------------------
+# Actividades CRUD
+# ---------------------------------------------------------------------------
+
+@_with_retry
+def create_actividad(fecha_actividad, funcionario, tipo_actividad, lugar, funcionarios_count, novedades, estatus="En Proceso", solicitud_ref=""):
+    conn = get_conn()
+    conn.execute(
+        "INSERT INTO actividades (fecha_actividad, funcionario, tipo_actividad, lugar, funcionarios_count, novedades, estatus, solicitud_ref) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (fecha_actividad, funcionario, tipo_actividad, lugar, funcionarios_count, novedades, estatus, solicitud_ref)
+    )
+    conn.commit()
+    if TURSO_URL:
+        conn.sync()
+    return conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+
+@_with_retry
+def update_actividad_status(actividad_id, estatus):
+    conn = get_conn()
+    conn.execute("UPDATE actividades SET estatus = ?, updated_at = datetime('now') WHERE id = ?", (estatus, actividad_id))
+    conn.commit()
+    if TURSO_URL:
+        conn.sync()
+
+@_with_retry
+def list_actividades_turso():
+    rows = get_conn().execute(
+        "SELECT id, fecha_actividad, funcionario, tipo_actividad, lugar, funcionarios_count, novedades, estatus, solicitud_ref, created_at FROM actividades ORDER BY created_at DESC"
+    ).fetchall()
+    return [{"id": r[0], "fecha_actividad": r[1], "funcionario": r[2], "tipo_actividad": r[3], "lugar": r[4], "funcionarios_count": r[5], "novedades": r[6], "estatus": r[7], "solicitud_ref": r[8], "created_at": r[9]} for r in rows]

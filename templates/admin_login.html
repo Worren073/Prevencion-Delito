@@ -110,7 +110,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
         <button type="submit">Acceder al Panel</button>
         {% if error %}
-        <div class="login-error">Correo o contraseña incorrectos.</div>
+        <div class="login-error">{{ error }}</div>
         {% endif %}
       </form>
       <div style="text-align:center;margin-top:20px;">

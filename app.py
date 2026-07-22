@@ -230,14 +230,18 @@ def login_required(roles=None):
 # Admin routes
 # ---------------------------------------------------------------------------
 
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return render_template('admin_login.html', error='Demasiados intentos. Espera 15 minutos.', csrf_token=generate_csrf_token()), 429
+
 @app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("5 per 15 minutes", methods=['POST'])
+@limiter.limit("3 per 15 minutes", methods=['POST'])
 def login():
     if request.method == 'POST':
         ip = request.remote_addr
         if not validate_csrf():
             logger.warning(f"CSRF inválido desde {ip}")
-            return render_template('admin_login.html', error=True, csrf_token=generate_csrf_token())
+            return render_template('admin_login.html', error='CSRF inválido. Intenta de nuevo.', csrf_token=generate_csrf_token())
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
 
@@ -257,7 +261,7 @@ def login():
             return redirect('/login/dashboard')
 
         logger.warning(f"Login fallido para '{email}' desde {ip}")
-        return render_template('admin_login.html', error=True, csrf_token=generate_csrf_token())
+        return render_template('admin_login.html', error='Correo o contraseña incorrectos.', csrf_token=generate_csrf_token())
     return render_template('admin_login.html', csrf_token=generate_csrf_token())
 
 @app.route('/login/dashboard')
@@ -290,17 +294,45 @@ def admin_data():
         rows.append(obj)
     return jsonify({'rows': rows, 'total': len(rows)})
 
-@app.route('/api/admin/actividades')
+@app.route('/api/admin/actividades', methods=['GET', 'POST'])
 def admin_actividades():
     if not session.get('user'):
         return jsonify({'error': 'No autorizado'}), 401
+
+    # POST: create new actividad in Turso
+    if request.method == 'POST':
+        if session['user'].get('role') not in ('admin', 'worker'):
+            return jsonify({'error': 'No autorizado'}), 403
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Datos requeridos'}), 400
+        required = ('fecha_actividad', 'funcionario', 'tipo_actividad', 'lugar')
+        missing = [f for f in required if not data.get(f)]
+        if missing:
+            return jsonify({'error': f'Campos requeridos: {", ".join(missing)}'}), 400
+        try:
+            act_id = db.create_actividad(
+                fecha_actividad=data['fecha_actividad'],
+                funcionario=data['funcionario'],
+                tipo_actividad=data['tipo_actividad'],
+                lugar=data['lugar'],
+                funcionarios_count=int(data.get('funcionarios_count', data.get('funcionarios_cant', 0))),
+                novedades=data.get('novedades', ''),
+                estatus=data.get('estatus', 'En Proceso'),
+                solicitud_ref=data.get('solicitud_ref', ''),
+            )
+            return jsonify({'ok': True, 'id': act_id})
+        except Exception as e:
+            return jsonify({'error': f'Error al crear actividad: {e}'}), 400
+
+    # GET: merge CSV data + Turso data
     try:
         res = requests.get(CSV_ACTIVIDADES_URL, timeout=15)
         res.raise_for_status()
         res.encoding = 'utf-8'
         reader = csv.DictReader(io.StringIO(res.text))
     except Exception:
-        return jsonify({'error': 'No se pudieron obtener los datos.'}), 502
+        reader = []
     rows = []
     for row in reader:
         if not row.get('Marca temporal', '').strip():
@@ -311,7 +343,23 @@ def admin_actividades():
             if key:
                 obj[key] = (val or '').strip()
         obj['funcionarios'] = int(obj.get('funcionarios', 0) or 0)
+        obj['source'] = 'csv'
         rows.append(obj)
+    # Add Turso actividades
+    for a in db.list_actividades_turso():
+        rows.append({
+            'id': a['id'],
+            'fecha_registro': a['created_at'],
+            'fecha_actividad': a['fecha_actividad'],
+            'funcionario': a['funcionario'],
+            'tipo_actividad': a['tipo_actividad'],
+            'lugar': a['lugar'],
+            'funcionarios': a['funcionarios_count'],
+            'novedades': a['novedades'],
+            'estatus': a['estatus'],
+            'solicitud_ref': a['solicitud_ref'],
+            'source': 'turso',
+        })
     completadas = sum(1 for r in rows if r.get('estatus', '').lower() == 'completado')
     en_proceso = sum(1 for r in rows if r.get('estatus', '').lower() == 'en proceso')
     total_funcionarios = sum(r['funcionarios'] for r in rows)
@@ -322,6 +370,22 @@ def admin_actividades():
         'en_proceso': en_proceso,
         'total_funcionarios': total_funcionarios,
     })
+
+@app.route('/api/admin/actividades/<int:act_id>/status', methods=['PUT'])
+def admin_actividad_status(act_id):
+    if not session.get('user'):
+        return jsonify({'error': 'No autorizado'}), 401
+    if session['user'].get('role') not in ('admin', 'worker'):
+        return jsonify({'error': 'No autorizado'}), 403
+    data = request.get_json()
+    estatus = data.get('estatus')
+    if estatus not in ('Completado', 'En Proceso'):
+        return jsonify({'error': 'Estatus inválido'}), 400
+    try:
+        db.update_actividad_status(act_id, estatus)
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 @app.route('/api/admin/me')
 def admin_me():
@@ -348,7 +412,7 @@ def admin_users():
     role = data.get('role', 'worker')
     if not email or not password or not name:
         return jsonify({'error': 'email, password y name son requeridos'}), 400
-    if role not in ('admin', 'worker', 'visitor'):
+    if role not in ('admin', 'worker'):
         return jsonify({'error': 'Rol inválido'}), 400
     try:
         db.create_user(email, password, name, role)
