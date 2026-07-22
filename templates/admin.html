@@ -618,6 +618,8 @@
         info.style.display = 'inline';
         if (currentUser.role !== 'admin' && currentUser.role !== 'worker') {
           document.getElementById('btnRegistrar').style.display = 'none';
+          const sb = document.getElementById('btnRegistrarSidebar');
+          if (sb) sb.style.display = 'none';
         }
         const sidebarUsuarios = document.getElementById('sidebarUsuarios');
         if (currentUser.role === 'admin' || currentUser.role === 'superadmin') {
@@ -648,7 +650,7 @@
     // Sidebar navigation
     // -----------------------------------------------------------------------
 
-    document.querySelectorAll('.sidebar-btn').forEach(btn => {
+    document.querySelectorAll('.sidebar-btn[data-section]').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -671,6 +673,10 @@
         }
         closeSidebar();
       });
+    });
+
+    document.querySelectorAll('.sidebar-action').forEach(el => {
+      el.addEventListener('click', closeSidebar);
     });
 
     document.getElementById('hamburgerBtn').addEventListener('click', () => {
