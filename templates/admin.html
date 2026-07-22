@@ -396,6 +396,9 @@
         <button class="sidebar-btn" data-section="solicitantes">
           <span style="font-size:1.1rem;">👤</span> Solicitantes
         </button>
+        <button class="sidebar-btn" data-section="actividades">
+          <span style="font-size:1.1rem;">📝</span> Actividades
+        </button>
         <button class="sidebar-btn" data-section="usuarios" id="sidebarUsuarios" style="display:none">
           <span style="font-size:1.1rem;">🔧</span> Usuarios
         </button>
@@ -411,15 +414,21 @@
 
       <!-- SECCIÓN: Solicitantes -->
       <div id="contentSolicitantes" class="section-content">
-        <h2>Resumen por Solicitante</h2>
+        <h2 class="reveal">Resumen por Solicitante</h2>
         <div class="summary-card reveal" id="summaryContainer">
           <p style="color:var(--on-surface-variant);font-size:0.8125rem;">Seleccione la sección Solicitudes para cargar datos.</p>
         </div>
       </div>
 
+      <!-- SECCIÓN: Actividades -->
+      <div id="contentActividades" class="section-content">
+        <h2 class="reveal">Actividades Registradas</h2>
+        <div id="actividadesContent"></div>
+      </div>
+
       <!-- SECCIÓN: Usuarios (admin only) -->
       <div id="contentUsuarios" class="section-content">
-        <h2>Gestión de Usuarios</h2>
+        <h2 class="reveal">Gestión de Usuarios</h2>
         <div class="toolbar">
           <button id="btnAddUser">+ Agregar Usuario</button>
           <span class="result-count" id="userCount"></span>
@@ -615,6 +624,10 @@
           renderSummary();
           observeReveals(document.getElementById('contentSolicitantes'));
         }
+        if (btn.dataset.section === 'actividades') {
+          renderActividadesSection();
+          observeReveals(document.getElementById('contentActividades'));
+        }
         if (btn.dataset.section === 'usuarios') {
           observeReveals(document.getElementById('contentUsuarios'));
         }
@@ -653,7 +666,7 @@
           <div class="kpi-card"><div class="kpi-value">${entidades}</div><div class="kpi-label">Entidades Alcanzadas</div></div>
           <div class="kpi-card"><div class="kpi-value">${parroquias}</div><div class="kpi-label">Parroquias / Zonas</div></div>
         </div>
-        <h2>Registro Completo de Solicitudes</h2>
+        <h2 class="reveal">Registro Completo de Solicitudes</h2>
         <div class="toolbar reveal">
           <input type="text" id="searchInput" placeholder="Buscar por nombre, teléfono, comunidad, tema..." value="${searchTerm}" />
           <button id="exportBtn"><span style="font-size:1rem;line-height:1;">⬇</span> Exportar CSV</button>
@@ -673,41 +686,16 @@
             <th data-col="publico">Público <span class="sort-icon">${sortCol === 'publico' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>
           </tr></thead><tbody id="tableBody"></tbody></table>
         </div></div>
-        <h2>Dashboard Gráfico</h2>
+        <h2 class="reveal">Dashboard Gráfico</h2>
         <div class="charts-grid reveal">
           <div class="chart-card"><h3>Solicitudes por Tema</h3><div id="chart-temas" class="chart-box"></div></div>
           <div class="chart-card"><h3>Solicitudes por Tipo de Entidad</h3><div id="chart-entidad" class="chart-box"></div></div>
           <div class="chart-card"><h3>Solicitudes por Mes</h3><div id="chart-mes" class="chart-box"></div></div>
           <div class="chart-card"><h3>Solicitudes por Parroquia / Zona</h3><div id="chart-parroquia" class="chart-box"></div></div>
         </div>
-        <h2 style="margin-top:24px;">Actividades Registradas</h2>
-        <div class="kpi-grid reveal" id="actKpiGrid">
-          <div class="kpi-card"><div class="kpi-value" id="actTotal">0</div><div class="kpi-label">Total Actividades</div></div>
-          <div class="kpi-card"><div class="kpi-value" id="actCompletadas">0</div><div class="kpi-label">Completadas</div></div>
-          <div class="kpi-card"><div class="kpi-value" id="actEnProceso">0</div><div class="kpi-label">En Proceso</div></div>
-          <div class="kpi-card"><div class="kpi-value" id="actFuncionarios">0</div><div class="kpi-label">Funcionarios Desplegados</div></div>
-        </div>
-        <div class="toolbar reveal">
-          <input type="text" id="actSearchInput" placeholder="Buscar por funcionario, lugar, tipo..." />
-          <button id="actExportBtn"><span style="font-size:1rem;line-height:1;">⬇</span> Exportar CSV</button>
-          <span class="result-count" id="actCount">${actividadesData.length} registros</span>
-        </div>
-        <div class="table-wrapper reveal"><div class="table-scroll">
-          <table id="actTable"><thead><tr>
-            <th data-act-col="fecha_registro">Fecha Registro</th>
-            <th data-act-col="fecha_actividad">Fecha Activ.</th>
-            <th data-act-col="funcionario">Funcionario</th>
-            <th data-act-col="tipo_actividad">Tipo Actividad</th>
-            <th data-act-col="lugar">Lugar</th>
-            <th data-act-col="funcionarios" style="text-align:right;">Func. Despl.</th>
-            <th data-act-col="novedades">Novedades</th>
-            <th data-act-col="estatus">Estatus</th>
-          </tr></thead><tbody id="actTableBody"></tbody></table>
-        </div></div>
       `;
       renderTableBody();
       drawCharts();
-      renderActividades();
       bindEvents();
       setTimeout(() => observeReveals(document.getElementById('solicitudesContent')), 100);
     }
@@ -868,18 +856,6 @@
       });
       const exportBtn = document.getElementById('exportBtn');
       if (exportBtn) exportBtn.addEventListener('click', exportCSV);
-
-      const actSearchInput = document.getElementById('actSearchInput');
-      if (actSearchInput) {
-        actSearchInput.addEventListener('input', (e) => {
-          const term = e.target.value.toLowerCase();
-          if (!term) { actividadesData = [...window._actKpis.rows]; }
-          else { actividadesData = window._actKpis.rows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(term))); }
-          renderActividades();
-        });
-      }
-      const actExportBtn = document.getElementById('actExportBtn');
-      if (actExportBtn) actExportBtn.addEventListener('click', exportActCSV);
     }
 
     function exportCSV() {
@@ -902,9 +878,62 @@
       URL.revokeObjectURL(url);
     }
 
+    // -----------------------------------------------------------------------
+    // Section: Actividades
+    // -----------------------------------------------------------------------
+
+    function renderActividadesSection() {
+      const kpis = window._actKpis || { total: 0, completadas: 0, en_proceso: 0, total_funcionarios: 0 };
+      const container = document.getElementById('actividadesContent');
+      container.innerHTML = `
+        <div class="kpi-grid reveal">
+          <div class="kpi-card"><div class="kpi-value" id="actTotal">${kpis.total}</div><div class="kpi-label">Total Actividades</div></div>
+          <div class="kpi-card"><div class="kpi-value" id="actCompletadas">${kpis.completadas}</div><div class="kpi-label">Completadas</div></div>
+          <div class="kpi-card"><div class="kpi-value" id="actEnProceso">${kpis.en_proceso}</div><div class="kpi-label">En Proceso</div></div>
+          <div class="kpi-card"><div class="kpi-value" id="actFuncionarios">${kpis.total_funcionarios}</div><div class="kpi-label">Funcionarios Desplegados</div></div>
+        </div>
+        <div class="toolbar reveal">
+          <input type="text" id="actSearchInput" placeholder="Buscar por funcionario, lugar, tipo..." />
+          <button id="actExportBtn"><span style="font-size:1rem;line-height:1;">⬇</span> Exportar CSV</button>
+          <span class="result-count" id="actCount">${actividadesData.length} registros</span>
+        </div>
+        <div class="table-wrapper reveal"><div class="table-scroll">
+          <table id="actTable"><thead><tr>
+            <th data-act-col="fecha_registro">Fecha Registro</th>
+            <th data-act-col="fecha_actividad">Fecha Activ.</th>
+            <th data-act-col="funcionario">Funcionario</th>
+            <th data-act-col="tipo_actividad">Tipo Actividad</th>
+            <th data-act-col="lugar">Lugar</th>
+            <th data-act-col="funcionarios" style="text-align:right;">Func. Despl.</th>
+            <th data-act-col="novedades">Novedades</th>
+            <th data-act-col="estatus">Estatus</th>
+          </tr></thead><tbody id="actTableBody"></tbody></table>
+        </div></div>
+      `;
+      renderActividades();
+      bindActividadesEvents();
+      setTimeout(() => observeReveals(document.getElementById('actividadesContent')), 100);
+    }
+
+    function bindActividadesEvents() {
+      const input = document.getElementById('actSearchInput');
+      if (input) {
+        input.addEventListener('input', (e) => {
+          const term = e.target.value.toLowerCase();
+          if (!term) { actividadesData = [...window._actKpis.rows]; }
+          else { actividadesData = window._actKpis.rows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(term))); }
+          renderActividades();
+        });
+      }
+      const exportBtn = document.getElementById('actExportBtn');
+      if (exportBtn) exportBtn.addEventListener('click', exportActCSV);
+    }
+
     function renderActividades() {
       const kpis = window._actKpis || { total: 0, completadas: 0, en_proceso: 0, total_funcionarios: 0 };
-      document.getElementById('actTotal').textContent = kpis.total;
+      const elTotal = document.getElementById('actTotal');
+      if (!elTotal) return;
+      elTotal.textContent = kpis.total;
       document.getElementById('actCompletadas').textContent = kpis.completadas;
       document.getElementById('actEnProceso').textContent = kpis.en_proceso;
       document.getElementById('actFuncionarios').textContent = kpis.total_funcionarios;
