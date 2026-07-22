@@ -285,6 +285,26 @@
       cursor: pointer; transition: all 0.15s;
     }
     .btn-sm:hover { background: var(--surface-container); border-color: var(--primary); color: var(--primary); }
+    .toggle-wrap {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 8px;
+      background: var(--surface-container-low);
+      border: 1px solid var(--outline-variant);
+    }
+    .toggle {
+      position: relative; width: 44px; height: 24px; flex-shrink: 0;
+      background: var(--outline-variant); border-radius: 12px;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .toggle.active { background: #16a34a; }
+    .toggle::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: #fff; transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle.active::after { transform: translateX(20px); }
+    .toggle-label { font-size: 0.8125rem; font-weight: 500; color: var(--on-surface); cursor: pointer; }
     .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.5s ease-out, transform 0.5s ease-out; }
     .reveal-visible { opacity: 1; transform: translateY(0); }
     .modal-overlay {
@@ -505,7 +525,11 @@
           <option value="visitor">Visitante</option>
         </select>
         <div id="userActiveField" style="display:none;margin-top:12px;">
-          <label><input type="checkbox" name="active" checked /> Usuario activo</label>
+          <div class="toggle-wrap">
+            <div class="toggle active" id="userActiveToggle" onclick="this.classList.toggle('active'); document.getElementById('userActiveInput').checked = this.classList.contains('active');"></div>
+            <span class="toggle-label" onclick="document.getElementById('userActiveToggle').click();">Usuario activo</span>
+            <input type="checkbox" name="active" id="userActiveInput" checked style="display:none" />
+          </div>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-secondary" id="btnUserCancel">Cancelar</button>
@@ -1106,7 +1130,9 @@
       userForm.querySelector('[name="role"]').value = u.role;
       userForm.querySelector('[name="password"]').required = false;
       userForm.querySelector('[name="password"]').value = '';
-      userForm.querySelector('[name="active"]').checked = u.active;
+      document.getElementById('userActiveInput').checked = u.active;
+      const toggle = document.getElementById('userActiveToggle');
+      if (u.active) toggle.classList.add('active'); else toggle.classList.remove('active');
       userModalTitle.textContent = 'Editar Usuario';
       btnUserSubmit.textContent = 'Guardar Cambios';
       userActiveField.style.display = 'block';
