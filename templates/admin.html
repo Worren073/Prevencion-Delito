@@ -102,6 +102,9 @@
       padding: 12px 0;
       flex-shrink: 0;
       overflow-y: auto;
+      position: sticky;
+      top: 60px;
+      height: calc(100vh - 60px);
       transition: transform 0.25s ease;
     }
     .sidebar-btn {
@@ -651,7 +654,7 @@
           <div class="kpi-card"><div class="kpi-value">${parroquias}</div><div class="kpi-label">Parroquias / Zonas</div></div>
         </div>
         <h2>Registro Completo de Solicitudes</h2>
-        <div class="toolbar">
+        <div class="toolbar reveal">
           <input type="text" id="searchInput" placeholder="Buscar por nombre, teléfono, comunidad, tema..." value="${searchTerm}" />
           <button id="exportBtn"><span style="font-size:1rem;line-height:1;">⬇</span> Exportar CSV</button>
           <span class="result-count" id="resultCount">${filteredData.length} de ${data.length} registros</span>
@@ -684,7 +687,7 @@
           <div class="kpi-card"><div class="kpi-value" id="actEnProceso">0</div><div class="kpi-label">En Proceso</div></div>
           <div class="kpi-card"><div class="kpi-value" id="actFuncionarios">0</div><div class="kpi-label">Funcionarios Desplegados</div></div>
         </div>
-        <div class="toolbar">
+        <div class="toolbar reveal">
           <input type="text" id="actSearchInput" placeholder="Buscar por funcionario, lugar, tipo..." />
           <button id="actExportBtn"><span style="font-size:1rem;line-height:1;">⬇</span> Exportar CSV</button>
           <span class="result-count" id="actCount">${actividadesData.length} registros</span>

@@ -95,6 +95,7 @@ def create_user(email, password, name, role):
         "INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)",
         (email, pw_hash, name, role)
     )
+    conn.commit()
     if TURSO_URL:
         conn.sync()
 
@@ -118,6 +119,7 @@ def update_user(user_id, email=None, password=None, name=None, role=None, active
     sets.append("updated_at = datetime('now')")
     params.append(user_id)
     conn.execute(f"UPDATE users SET {', '.join(sets)} WHERE id = ?", params)
+    conn.commit()
     if TURSO_URL:
         conn.sync()
 
@@ -125,5 +127,6 @@ def update_user(user_id, email=None, password=None, name=None, role=None, active
 def delete_user(user_id):
     conn = get_conn()
     conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
     if TURSO_URL:
         conn.sync()
