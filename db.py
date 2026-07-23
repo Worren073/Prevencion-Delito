@@ -155,7 +155,7 @@ def update_user(user_id, email=None, password=None, name=None, role=None, active
         return
     sets.append("updated_at = datetime('now')")
     params.append(user_id)
-    conn.execute(f"UPDATE users SET {', '.join(sets)} WHERE id = ?", params)
+    conn.execute(f"UPDATE users SET {', '.join(sets)} WHERE id = ?", tuple(params))
     conn.commit()
     if TURSO_URL:
         conn.sync()
