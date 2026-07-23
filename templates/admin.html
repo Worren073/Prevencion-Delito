@@ -1183,8 +1183,10 @@
     });
 
     modalOverlay.addEventListener('click', (e) => {
-      if (e.target === modalOverlay) modalOverlay.classList.remove('open');
-      _pendingSolicitudId = null;
+      if (e.target === modalOverlay) {
+        modalOverlay.classList.remove('open');
+        _pendingSolicitudId = null;
+      }
     });
 
     // Aceptar solicitud → pre-fill modal with solicitud data
@@ -1229,8 +1231,7 @@
         notyf.success('Solicitud declinada');
         _pendingSolicitudId = null;
         await fetchData();
-        applyFilters();
-        renderTableBody();
+        renderSolicitudes();
         if (document.getElementById('actividadesContent').innerHTML) {
           renderActividadesSection();
         }
@@ -1325,8 +1326,7 @@
           } catch (_) { notyf.error('Error al actualizar solicitud'); }
           _pendingSolicitudId = null;
           await fetchData();
-          applyFilters();
-          renderTableBody();
+          renderSolicitudes();
         }
         modalOverlay.classList.remove('open');
         modalMsg.textContent = '';
