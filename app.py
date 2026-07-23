@@ -5,7 +5,7 @@ from datetime import timedelta
 from dotenv import load_dotenv
 from flask import Flask, request, session, redirect, render_template, send_from_directory, jsonify
 from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+
 from werkzeug.security import check_password_hash, generate_password_hash
 import db
 
@@ -32,7 +32,13 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY', secrets.token_hex(32))
 if 'FLASK_SECRET_KEY' not in os.environ:
     print("WARNING: FLASK_SECRET_KEY not set. Using temporary random key. Sessions will not persist across restarts.")
 
-limiter = Limiter(get_remote_address, app=app, default_limits=[], storage_uri="memory://")
+def _real_client_ip():
+    forwarded = request.headers.get('X-Forwarded-For')
+    if forwarded:
+        return forwarded.split(',')[0].strip()
+    return request.remote_addr or 'unknown'
+
+limiter = Limiter(_real_client_ip, app=app, default_limits=[], storage_uri="memory://")
 
 ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', '').strip().lower()
 ADMIN_PASSWORD_HASHES = [h.strip() for h in os.getenv('ADMIN_PASSWORD_HASH', '').split(',') if h.strip()]
