@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/logo-gobierno.png" />
   <title>Panel Administrativo - Prevención del Delito</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -525,7 +526,8 @@
         <input type="date" name="fecha_act" required />
 
         <label>Nombre del funcionario Responsable</label>
-        <input type="text" name="funcionario" placeholder="Nombre y apellido" maxlength="200" required />
+        <input type="text" name="funcionario" placeholder="Nombre y apellido" maxlength="200" required oninput="this.nextElementSibling.textContent=this.value.length+'/'+this.maxLength" />
+        <small style="display:block;font-size:0.75rem;color:#888;margin-top:2px;">0/200</small>
 
         <label>Tipo de Actividad</label>
         <div class="radio-group">
@@ -537,13 +539,15 @@
         </div>
 
         <label>Lugar / Comunidad / Sector</label>
-        <input type="text" name="lugar" placeholder="Ej. Barrio San José" maxlength="300" required />
+        <input type="text" name="lugar" placeholder="Ej. Barrio San José" maxlength="300" required oninput="this.nextElementSibling.textContent=this.value.length+'/'+this.maxLength" />
+        <small style="display:block;font-size:0.75rem;color:#888;margin-top:2px;">0/300</small>
 
         <label>Cantidad de funcionarios Desplegados</label>
         <input type="number" name="funcionarios_cant" min="1" max="999" required />
 
         <label>Novedades / Resumen de la Actividad</label>
-        <textarea name="novedades" placeholder="Describa brevemente los resultados de la actividad" maxlength="2000" required></textarea>
+        <textarea name="novedades" placeholder="Describa brevemente los resultados de la actividad" maxlength="2000" required oninput="this.nextElementSibling.textContent=this.value.length+'/'+this.maxLength"></textarea>
+        <small style="display:block;font-size:0.75rem;color:#888;margin-top:2px;">0/2000</small>
 
         <label>Estatus de la Actividad</label>
         <div class="radio-group">
@@ -852,8 +856,15 @@
         return;
       }
       let html = '';
-      filteredData.slice().reverse().forEach((r, i) => {
-        const idx = filteredData.length - 1 - i;
+      const items = filteredData.slice().reverse();
+      if (!sortCol) {
+        items.sort((a, b) => {
+          const aPend = (a.estatus || 'pendiente') === 'pendiente' ? 0 : 1;
+          const bPend = (b.estatus || 'pendiente') === 'pendiente' ? 0 : 1;
+          return aPend - bPend;
+        });
+      }
+      items.forEach((r) => {
         const estatus = r.estatus || 'pendiente';
         let badges = '';
         if (estatus === 'aceptada') badges = '<span class="badge-aceptada">Aceptada</span>';
