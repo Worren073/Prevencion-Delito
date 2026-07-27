@@ -209,23 +209,22 @@ def _send_email_code(addr, code):
     subject = "Código de verificación - Prevención del Delito"
     body = f"Su código de verificación es: {code}\n\nVálido por 5 minutos.\n\nSi no solicitó este código, ignore este mensaje."
     if SMTP_HOST and SMTP_USER and SMTP_PASS:
-        import smtplib
+        import smtplib, socket
         from email.mime.text import MIMEText
         msg = MIMEText(body)
         msg['Subject'] = subject
         msg['From'] = MAIL_FROM
         msg['To'] = addr
         try:
-            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as s:
                 s.starttls()
                 s.login(SMTP_USER, SMTP_PASS)
                 s.send_message(msg)
             logger.info(f"2FA code enviado a {_mask_email(addr)}")
+            return
         except Exception as e:
-            logger.error(f"Error al enviar email 2FA a {_mask_email(addr)}: {e}")
-            raise
-    else:
-        logger.info(f"2FA code (SMTP no configurado): {code} para {addr}")
+            logger.error(f"Error SMTP al enviar a {_mask_email(addr)}: {e}")
+    logger.info(f"2FA code (fallback): {code} para {addr}")
 
 @app.route('/login', methods=['GET', 'POST'])
 @limiter.limit("3 per 15 minutes", methods=['POST'])
