@@ -215,15 +215,23 @@ def _send_email_code(addr, code):
         msg['Subject'] = subject
         msg['From'] = MAIL_FROM
         msg['To'] = addr
-        try:
-            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as s:
-                s.starttls()
-                s.login(SMTP_USER, SMTP_PASS)
-                s.send_message(msg)
-            logger.info(f"2FA code enviado a {_mask_email(addr)}")
-            return
-        except Exception as e:
-            logger.error(f"Error SMTP al enviar a {_mask_email(addr)}: {e}")
+        fallback_ports = [(587, False), (465, True)]
+        ordered = [(SMTP_PORT, False)] + [p for p in fallback_ports if p[0] != SMTP_PORT]
+        for port, ssl in ordered:
+            try:
+                if ssl:
+                    with smtplib.SMTP_SSL(SMTP_HOST, port, timeout=10) as s:
+                        s.login(SMTP_USER, SMTP_PASS)
+                        s.send_message(msg)
+                else:
+                    with smtplib.SMTP(SMTP_HOST, port, timeout=10) as s:
+                        s.starttls()
+                        s.login(SMTP_USER, SMTP_PASS)
+                        s.send_message(msg)
+                logger.info(f"2FA code enviado a {_mask_email(addr)} (puerto {port})")
+                return
+            except Exception as e:
+                logger.warning(f"SMTP puerto {port} falló: {e}")
     logger.info(f"2FA code (fallback): {code} para {addr}")
 
 @app.route('/login', methods=['GET', 'POST'])
