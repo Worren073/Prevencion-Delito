@@ -46,6 +46,8 @@ ADMIN_PASSWORD_HASHES = [h.strip() for h in os.getenv('ADMIN_PASSWORD_HASH', '')
 if not ADMIN_PASSWORD_HASHES:
     raise RuntimeError("ADMIN_PASSWORD_HASH no configurado en .env. Genera uno con: python -c \"from werkzeug.security import generate_password_hash; print(generate_password_hash('tu-password'))\"")
 
+MAILGUN_API_KEY = os.getenv('MAILGUN_API_KEY', '')
+MAILGUN_DOMAIN = os.getenv('MAILGUN_DOMAIN', '')
 SMTP_HOST = os.getenv('SMTP_HOST', '')
 SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
 SMTP_USER = os.getenv('SMTP_USER', '')
@@ -205,33 +207,65 @@ def _mask_email(email):
         return email[0] + '***' + email[at-1:at] + email[at:]
     return email
 
+def _send_via_mailgun(addr, subject, body):
+    if not (MAILGUN_API_KEY and MAILGUN_DOMAIN):
+        return False
+    try:
+        import requests
+        r = requests.post(
+            f'https://api.mailgun.net/v3/{MAILGUN_DOMAIN}/messages',
+            auth=('api', MAILGUN_API_KEY),
+            data={
+                'from': MAIL_FROM or f'noreply@{MAILGUN_DOMAIN}',
+                'to': addr,
+                'subject': subject,
+                'text': body,
+            },
+            timeout=15,
+        )
+        if r.ok:
+            logger.info(f"2FA code enviado a {_mask_email(addr)} vía Mailgun")
+            return True
+        logger.warning(f"Mailgun respondió {r.status_code}: {r.text[:200]}")
+    except Exception as e:
+        logger.warning(f"Mailgun falló: {e}")
+    return False
+
+def _send_via_smtp(addr, subject, body):
+    if not (SMTP_HOST and SMTP_USER and SMTP_PASS):
+        return False
+    import smtplib
+    from email.mime.text import MIMEText
+    msg = MIMEText(body)
+    msg['Subject'] = subject
+    msg['From'] = MAIL_FROM
+    msg['To'] = addr
+    fallback_ports = [(587, False), (465, True)]
+    ordered = [(SMTP_PORT, False)] + [p for p in fallback_ports if p[0] != SMTP_PORT]
+    for port, ssl in ordered:
+        try:
+            if ssl:
+                with smtplib.SMTP_SSL(SMTP_HOST, port, timeout=10) as s:
+                    s.login(SMTP_USER, SMTP_PASS)
+                    s.send_message(msg)
+            else:
+                with smtplib.SMTP(SMTP_HOST, port, timeout=10) as s:
+                    s.starttls()
+                    s.login(SMTP_USER, SMTP_PASS)
+                    s.send_message(msg)
+            logger.info(f"2FA code enviado a {_mask_email(addr)} vía SMTP (puerto {port})")
+            return True
+        except Exception as e:
+            logger.warning(f"SMTP puerto {port} falló: {e}")
+    return False
+
 def _send_email_code(addr, code):
     subject = "Código de verificación - Prevención del Delito"
     body = f"Su código de verificación es: {code}\n\nVálido por 5 minutos.\n\nSi no solicitó este código, ignore este mensaje."
-    if SMTP_HOST and SMTP_USER and SMTP_PASS:
-        import smtplib, socket
-        from email.mime.text import MIMEText
-        msg = MIMEText(body)
-        msg['Subject'] = subject
-        msg['From'] = MAIL_FROM
-        msg['To'] = addr
-        fallback_ports = [(587, False), (465, True)]
-        ordered = [(SMTP_PORT, False)] + [p for p in fallback_ports if p[0] != SMTP_PORT]
-        for port, ssl in ordered:
-            try:
-                if ssl:
-                    with smtplib.SMTP_SSL(SMTP_HOST, port, timeout=10) as s:
-                        s.login(SMTP_USER, SMTP_PASS)
-                        s.send_message(msg)
-                else:
-                    with smtplib.SMTP(SMTP_HOST, port, timeout=10) as s:
-                        s.starttls()
-                        s.login(SMTP_USER, SMTP_PASS)
-                        s.send_message(msg)
-                logger.info(f"2FA code enviado a {_mask_email(addr)} (puerto {port})")
-                return
-            except Exception as e:
-                logger.warning(f"SMTP puerto {port} falló: {e}")
+    if _send_via_mailgun(addr, subject, body):
+        return
+    if _send_via_smtp(addr, subject, body):
+        return
     logger.info(f"2FA code (fallback): {code} para {addr}")
 
 @app.route('/login', methods=['GET', 'POST'])
