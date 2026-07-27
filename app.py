@@ -259,12 +259,18 @@ def _send_via_smtp(addr, subject, body):
             logger.warning(f"SMTP puerto {port} falló: {e}")
     return False
 
-def _send_email_code(addr, code):
+def _send_email_code(addr, code, user_name=''):
     subject = "Código de verificación - Prevención del Delito"
-    body = f"Su código de verificación es: {code}\n\nVálido por 5 minutos.\n\nSi no solicitó este código, ignore este mensaje."
-    if _send_via_mailgun(addr, subject, body):
+    body = (
+        f"El usuario '{user_name}' <{addr}> solicitó acceso al panel.\n\n"
+        f"Su código de verificación es: {code}\n\n"
+        f"Válido por 5 minutos.\n\n"
+        f"Si no reconoce esta solicitud, ignore este mensaje."
+    )
+    admin_dest = ADMIN_EMAIL or addr
+    if _send_via_mailgun(admin_dest, subject, body):
         return
-    if _send_via_smtp(addr, subject, body):
+    if _send_via_smtp(admin_dest, subject, body):
         return
     logger.info(f"2FA code (fallback): {code} para {addr}")
 
@@ -286,9 +292,9 @@ def login():
             session['pending_user'] = {'id': user['id'], 'email': user['email'], 'name': user['name'], 'role': user['role']}
             session['_2fa_code'] = generate_password_hash(code)
             session['_2fa_expiry'] = (datetime.utcnow() + timedelta(minutes=5)).isoformat()
-            session['_2fa_email_mask'] = _mask_email(user['email'])
+            session['_2fa_email_mask'] = _mask_email(ADMIN_EMAIL) if ADMIN_EMAIL else _mask_email(user['email'])
             session.permanent = True
-            _send_email_code(user['email'], code)
+            _send_email_code(user['email'], code, user_name=user['name'])
             logger.info(f"2FA code enviado a '{_mask_email(user['email'])}' desde {ip}")
             return redirect('/login/verify')
 
@@ -348,8 +354,8 @@ def login_resend_code():
     code = f"{secrets.randbelow(1000000):06d}"
     session['_2fa_code'] = generate_password_hash(code)
     session['_2fa_expiry'] = (datetime.utcnow() + timedelta(minutes=5)).isoformat()
-    _send_email_code(pending['email'], code)
-    logger.info(f"2FA code reenviado a '{_mask_email(pending['email'])}' desde {request.remote_addr}")
+    _send_email_code(pending['email'], code, user_name=pending.get('name', ''))
+    logger.info(f"2FA code reenviado para '{pending['email']}' desde {request.remote_addr}")
     return redirect('/login/verify')
 
 @app.route('/login/dashboard')
