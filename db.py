@@ -90,7 +90,7 @@ def _init_schema():
     try:
         conn.execute("ALTER TABLE solicitudes ADD COLUMN motivo TEXT DEFAULT ''")
     except Exception:
-        pass  # column already exists
+        pass
     if TURSO_URL:
         conn.sync()
 

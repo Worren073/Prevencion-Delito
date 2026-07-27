@@ -1,7 +1,7 @@
 import os
 import secrets
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from flask import Flask, request, session, redirect, render_template, send_from_directory, jsonify
 from flask_limiter import Limiter
@@ -45,6 +45,12 @@ ADMIN_PASSWORD_HASHES = [h.strip() for h in os.getenv('ADMIN_PASSWORD_HASH', '')
 
 if not ADMIN_PASSWORD_HASHES:
     raise RuntimeError("ADMIN_PASSWORD_HASH no configurado en .env. Genera uno con: python -c \"from werkzeug.security import generate_password_hash; print(generate_password_hash('tu-password'))\"")
+
+SMTP_HOST = os.getenv('SMTP_HOST', '')
+SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
+SMTP_USER = os.getenv('SMTP_USER', '')
+SMTP_PASS = os.getenv('SMTP_PASS', '')
+MAIL_FROM = os.getenv('MAIL_FROM', SMTP_USER)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -187,7 +193,39 @@ def login_required(roles=None):
 
 @app.errorhandler(429)
 def ratelimit_handler(e):
-    return render_template('admin_login.html', error='Demasiados intentos. Espera 15 minutos.', csrf_token=generate_csrf_token()), 429
+    verify_mode = session.get('pending_user') is not None
+    tpl = 'admin_verify.html' if verify_mode else 'admin_login.html'
+    error = 'Demasiados intentos. Espera 15 minutos.'
+    mask = session.get('_2fa_email_mask', '')
+    return render_template(tpl, error=error, csrf_token=generate_csrf_token(), email_mask=mask), 429
+
+def _mask_email(email):
+    at = email.find('@')
+    if at > 1:
+        return email[0] + '***' + email[at-1:at] + email[at:]
+    return email
+
+def _send_email_code(addr, code):
+    subject = "Código de verificación - Prevención del Delito"
+    body = f"Su código de verificación es: {code}\n\nVálido por 5 minutos.\n\nSi no solicitó este código, ignore este mensaje."
+    if SMTP_HOST and SMTP_USER and SMTP_PASS:
+        import smtplib
+        from email.mime.text import MIMEText
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = MAIL_FROM
+        msg['To'] = addr
+        try:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
+                s.starttls()
+                s.login(SMTP_USER, SMTP_PASS)
+                s.send_message(msg)
+            logger.info(f"2FA code enviado a {_mask_email(addr)}")
+        except Exception as e:
+            logger.error(f"Error al enviar email 2FA a {_mask_email(addr)}: {e}")
+            raise
+    else:
+        logger.info(f"2FA code (SMTP no configurado): {code} para {addr}")
 
 @app.route('/login', methods=['GET', 'POST'])
 @limiter.limit("3 per 15 minutes", methods=['POST'])
@@ -200,15 +238,20 @@ def login():
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
 
-        # 1. Try Turso
+        # 1. Try Turso — requiere 2FA por email
         user = db.get_user_by_email(email)
         if user and check_password_hash(user['password_hash'], password):
-            session['user'] = {'id': user['id'], 'email': user['email'], 'name': user['name'], 'role': user['role']}
+            code = f"{secrets.randbelow(1000000):06d}"
+            session['pending_user'] = {'id': user['id'], 'email': user['email'], 'name': user['name'], 'role': user['role']}
+            session['_2fa_code'] = generate_password_hash(code)
+            session['_2fa_expiry'] = (datetime.utcnow() + timedelta(minutes=5)).isoformat()
+            session['_2fa_email_mask'] = _mask_email(user['email'])
             session.permanent = True
-            logger.info(f"Login exitoso (Turso) para '{email}' rol={user['role']} desde {ip}")
-            return redirect('/login/dashboard')
+            _send_email_code(user['email'], code)
+            logger.info(f"2FA code enviado a '{_mask_email(user['email'])}' desde {ip}")
+            return redirect('/login/verify')
 
-        # 2. Fallback superadmin (env vars)
+        # 2. Fallback superadmin (env vars) — sin 2FA
         if email == ADMIN_EMAIL and any(check_password_hash(h, password) for h in ADMIN_PASSWORD_HASHES):
             session['user'] = {'email': ADMIN_EMAIL, 'name': 'Administrador', 'role': 'admin', 'is_superadmin': True}
             session.permanent = True
@@ -218,6 +261,55 @@ def login():
         logger.warning(f"Login fallido para '{email}' desde {ip}")
         return render_template('admin_login.html', error='Correo o contraseña incorrectos.', csrf_token=generate_csrf_token())
     return render_template('admin_login.html', csrf_token=generate_csrf_token())
+
+@app.route('/login/verify', methods=['GET', 'POST'])
+@limiter.limit("3 per 15 minutes", methods=['POST'])
+def login_verify():
+    pending = session.get('pending_user')
+    if not pending:
+        return redirect('/login')
+    mask = session.get('_2fa_email_mask', '')
+    if request.method == 'GET':
+        return render_template('admin_verify.html', error='', csrf_token=generate_csrf_token(), email_mask=mask)
+    if not validate_csrf():
+        return render_template('admin_verify.html', error='CSRF inválido. Intenta de nuevo.', csrf_token=generate_csrf_token(), email_mask=mask)
+    code_input = request.form.get('code', '').strip()
+    expiry_str = session.get('_2fa_expiry', '')
+    if expiry_str:
+        try:
+            expiry = datetime.fromisoformat(expiry_str)
+            if datetime.utcnow() > expiry:
+                session.pop('pending_user', None)
+                session.pop('_2fa_code', None)
+                session.pop('_2fa_expiry', None)
+                session.pop('_2fa_email_mask', None)
+                logger.warning(f"2FA code expirado para {pending.get('email')} desde {request.remote_addr}")
+                return render_template('admin_verify.html', error='El código ha expirado. Solicite uno nuevo.', csrf_token=generate_csrf_token(), email_mask=mask)
+        except (ValueError, TypeError):
+            pass
+    stored_hash = session.get('_2fa_code', '')
+    if stored_hash and check_password_hash(stored_hash, code_input):
+        session['user'] = pending
+        session.pop('pending_user', None)
+        session.pop('_2fa_code', None)
+        session.pop('_2fa_expiry', None)
+        session.pop('_2fa_email_mask', None)
+        logger.info(f"2FA exitoso para '{pending['email']}' desde {request.remote_addr}")
+        return redirect('/login/dashboard')
+    logger.warning(f"2FA fallido para '{pending.get('email')}' desde {request.remote_addr}")
+    return render_template('admin_verify.html', error='Código incorrecto. Intente de nuevo.', csrf_token=generate_csrf_token(), email_mask=mask)
+
+@app.route('/login/resend-code', methods=['POST'])
+def login_resend_code():
+    pending = session.get('pending_user')
+    if not pending:
+        return redirect('/login')
+    code = f"{secrets.randbelow(1000000):06d}"
+    session['_2fa_code'] = generate_password_hash(code)
+    session['_2fa_expiry'] = (datetime.utcnow() + timedelta(minutes=5)).isoformat()
+    _send_email_code(pending['email'], code)
+    logger.info(f"2FA code reenviado a '{_mask_email(pending['email'])}' desde {request.remote_addr}")
+    return redirect('/login/verify')
 
 @app.route('/login/dashboard')
 def admin_dashboard():
@@ -403,6 +495,10 @@ def admin_user(user_id):
 @app.route('/login/logout')
 def admin_logout():
     session.pop('user', None)
+    session.pop('pending_user', None)
+    session.pop('_2fa_code', None)
+    session.pop('_2fa_expiry', None)
+    session.pop('_2fa_email_mask', None)
     return redirect('/')
 
 if __name__ == '__main__':
